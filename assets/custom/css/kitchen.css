@@ -1,3 +1,32 @@
+/* width */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+  background: rgba(0, 0, 0, 0.02)
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-top-left-radius: 3px;
+  border-top-right-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-bottom-right-radius: 3px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
 .item .label {
   position: absolute;
   top: 0px;
@@ -64,8 +93,8 @@
   color: #00acac;
 }
 .item-image {
-  width: 120px;
-  height: 120px;
+  width: 150px;
+  height: 150px;
 }
 .keyboard div {
   background: linear-gradient(to bottom, #a57ee6 0, #783eda 100%) !important;
