@@ -1,0 +1,108 @@
+.item .label {
+  position: absolute;
+  top: 0px;
+  left: 30px;
+  background: #00acac;
+  width: 17px;
+  height: 17px;
+  line-height: 17px;
+  font-weight: 600;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.item .label2 {
+  position: absolute;
+  top: 10px;
+  right: 30px;
+  background: #00acac;
+  width: 17px;
+  height: 17px;
+  line-height: 17px;
+  font-weight: 600;
+  padding: 0;
+  border-radius: 50%;
+}
+
+#gritter-notice-wrapper {
+  bottom: 20px;
+  top: unset;
+}
+.item-title ul.ingredients {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.item-title ul.ingredients li {
+  display: inline;
+  font-size: 14px;
+  margin: 0 3px;
+}
+.item-title ul.ingredients li a {
+  color: gray;
+}
+.item-attributes ul,
+.dispose_option ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.item-attributes ul li,
+.dispose_option ul li {
+  position: relative;
+  padding-left: 25px;
+}
+.item-attributes ul li i,
+.dispose_option ul li i {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  margin-top: -0.625rem;
+  line-height: 1.25rem;
+  font-size: 7px;
+  text-align: center;
+  color: #00acac;
+}
+.item-image {
+  width: 120px;
+  height: 120px;
+}
+.keyboard div {
+  background: linear-gradient(to bottom, #a57ee6 0, #783eda 100%) !important;
+  text-align: center;
+
+  color: white;
+  border-radius: 50%;
+  font-size: 15px;
+  height: 40px;
+  width: 40px;
+  line-height: 40px;
+  cursor: pointer;
+  margin-bottom: 10px;
+}
+
+.swal-text {
+  padding: 0 50px;
+  font-size: 14px;
+}
+.raw-material-list,
+.raw-material-disposal-history {
+  overflow: auto;
+}
+.raw-material-list ul,
+.raw-material-disposal-history ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.raw-material-list ul li,
+.raw-material-disposal-history ul li {
+  margin-left: 10px;
+}
+.raw-material-list ul hr,
+.raw-material-disposal-history ul hr {
+  margin: 3px;
+}
+.raw-material-list li.active .widget-list-item {
+  background: rgba(100, 0, 0, 0.1);
+}

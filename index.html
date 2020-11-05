@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="utf-8">
+  <title>Kitchen app</title>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+  <meta content="Kitchen application for cookers" name="description" />
+  <meta content="Laguna" name="author" />
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+
+  <link href="assets/plugins/gritter/css/jquery.gritter.css" rel="stylesheet" />
+  <link href="assets/css/app.min.css" rel="stylesheet" />
+  <link href="assets/custom/css/kitchen.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div id="page-container" class="fade page-sidebar-fixed page-header-fixed show has-scroll">
+    <div id="header" class="header navbar-default">
+      <div class="navbar-header">
+        <a href="index.html" class="navbar-brand">
+          <span class="navbar-logo"></span>
+          <b>Kitchen</b> app
+        </a>
+        <button type="button" class="navbar-toggle" data-click="sidebar-toggled">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+      </div>
+      <ul class="navbar-nav navbar-right">
+        <li class="navbar-form">
+          <form name="search_form">
+            <div class="form-group">
+              <input type="text" class="form-control" placeholder="Enter keyword" />
+              <button class="btn btn-search"><i class="fa fa-search"></i></button>
+            </div>
+          </form>
+        </li>
+        <li class="dropdown kitchen-notifications">
+          <a href="javascript:;" data-toggle="dropdown" class="notification-count dropdown-toggle f-s-14" aria-expanded="false">
+            <i class="fa fa-bell"></i>
+          </a>
+          <div data-scrollbar="true" data-height="100%"></div>
+          <div class="dropdown-menu media-list dropdown-menu-right notifications">
+            <div class="dropdown-header">NOTIFICATIONS (1)</div>
+            <a href="javascript:;" class="dropdown-item media">
+              <div class="media-left">
+                <i class="fa fa-circle fa-3x fa-user-circle"></i>
+              </div>
+              <div class="media-body">
+                <h6 class="media-heading"> Welcome back! You have logged in.</h6>
+                <div class="text-muted f-s-10">1 min ago</div>
+              </div>
+            </a>
+            <div class="dropdown-footer text-center">
+              <a href="javascript:;">Clear all</a>
+            </div>
+          </div>
+        </li>
+        <li class="dropdown navbar-user">
+          <a href="javascript:;" class="dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
+            <i class="fa fa-circle fa-user-circle"></i>
+            <span class="d-none d-md-inline">Admin</span> <b class="caret"></b>
+          </a>
+          <div class="dropdown-menu dropdown-menu-right">
+            <a href="login.html" class="dropdown-item">Log Out</a>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div id="sidebar" class="sidebar">
+      <div data-scrollbar="true" data-height="100%">
+        <ul class="nav">
+          <li class="nav-profile">
+            <a href="javascript:;" data-toggle="nav-profile">
+              <div class="cover with-shadow w-100"></div>
+              <div class="image w-100 height-60" style="border-radius: unset;">
+                <img src="assets/img/media/wushilogo.png" alt="Wushi land logo" class="w-100">
+              </div>
+              <div class="info">
+                <b class="caret pull-right"></b>Admin
+                <small>Kitchen manager</small>
+              </div>
+            </a>
+          </li>
+          <li>
+            <ul class="nav nav-profile closed" style="display: none;">
+              <li><a href="javascript:;"><i class="fa fa-cog"></i> Settings</a></li>
+              <li><a href="javascript:;"><i class="fa fa-question-circle"></i> Tutorial</a></li>
+              <li><a href="javascript:;"><i class="fa fa-sign-out-alt"></i> Log out</a></li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="nav">
+          <li class="nav-header">Cooking items</li>
+        </ul>
+        <ul class="nav item-list m-t-10">
+
+        </ul>
+        <ul class="nav">
+          <li class="nav-header">Other pages</li>
+        </ul>
+        <ul class="nav m-t-10">
+          <li class="raw-material">
+            <a href="javascript:;" class="d-flex align-items-center justify-content-start">
+              <img src="assets/img/items/raw.jpg" class="widget-img widget-img-sm rounded" />
+              <p class="w-50 m-0 m-l-10">Raw materials</p>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="content" class="content">
+      <div class="row">
+        <div class="col-md-12">
+          <div class="widget widget-rounded m-b-30" data-id="widget">
+            <div class="widget-header d-flex justify-content-between align-items-center">
+              <h4 class="widget-header-title width-200">Item Overview</h4>
+              <div class="timestamp p-r-10 text-red f-w-600"></div>
+            </div>
+            <div class="vertical-box with-grid with-border-top item-details">
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade show" id="cook-item-modal" aria-modal="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">FOOD NAME AND SIMPLE DESCRIPTION</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="select_cook_option w-100 d-flex justify-content-between">
+            <span class="f-s-15 f-w-700">Cooking option</span>
+            <div class="">
+              <div class="custom-control custom-control-inline custom-radio">
+                <input class="custom-control-input" type="radio" name="cook_option" id="amount_cook" value="amount">
+                <label class="custom-control-label" for="amount_cook">Custom cook</label>
+              </div>
+              <div class="custom-control custom-control-inline custom-radio">
+                <input class="custom-control-input" type="radio" name="cook_option" id="batch_cook" value="batch" checked>
+                <label class="custom-control-label" for="batch_cook">Batch cook</label>
+              </div>
+            </div>
+          </div>
+          <hr>
+          <div class="cook_option">
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="javascript:;" class="btn btn-white" data-dismiss="modal">Cancel</a>
+          <a href="javascript:;" class="btn btn-success confirm_start_cooking">Start cooking</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade show" id="dispose-item-modal" aria-modal="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">FOOD NAME AND SIMPLE DESCRIPTION</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="dispose_option">
+
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="javascript:;" class="btn btn-white" data-dismiss="modal">Cancel</a>
+          <a href="javascript:;" class="btn btn-danger confirm_dispose_item">Dispose</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade show" id="dispose-raw-modal" aria-modal="true" style="display: none;">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h4 class="modal-title">RAW MATERIAL NAME AND SIMPLE DESCRIPTION</h4>
+          <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+        </div>
+        <div class="modal-body">
+          <div class="dispose_option">
+            <div class="w-100 m-b-20 d-flex flex-row">
+              <div class="w-50">
+                <span class="f-s-15 f-w-700">Disposal reason </span>
+                <div class="custom-control custom-radio m-t-20 m-b-5">
+                  <input class="custom-control-input" type="radio" name="disposal_reason" id="reason_0" value="Need for cooking" checked>
+                  <label class="custom-control-label" for="reason_0">Need for cooking</label>
+                </div>
+                <div class="custom-control custom-radio m-b-5">
+                  <input class="custom-control-input" type="radio" name="disposal_reason" id="reason_1" value="Quality went poor">
+                  <label class="custom-control-label" for="reason_1">Quality went poor</label>
+                </div>
+                <div class="custom-control custom-radio m-b-5">
+                  <input class="custom-control-input" type="radio" name="disposal_reason" id="reason_2" value="Not needed anymore">
+                  <label class="custom-control-label" for="reason_2">Not needed anymore</label>
+                </div>
+                <div class="custom-control custom-radio m-b-5">
+                  <input class="custom-control-input" type="radio" name="disposal_reason" id="reason_3" value="Something is in the raw material">
+                  <label class="custom-control-label" for="reason_3">Something is in the raw material</label>
+                </div>
+                <div class="custom-control custom-radio m-b-5">
+                  <input class="custom-control-input" type="radio" name="disposal_reason" id="reason_4" value="Other">
+                  <label class="custom-control-label" for="reason_4">Other</label>
+                </div>
+              </div>
+              <div class="w-50">
+                <div class="m-b-20"><span class="f-s-15 f-w-700 amount-display">Input amount (g) </span></div>
+                <div class="d-flex w-100 justify-content-center flex-row">
+                  <div class="w-50">
+                    <input type="text" class="form-control item_amount" />
+                    <div class="m-t-5 item_percent"></div>
+                  </div>
+                  <div class="keyboard d-flex flex-row justify-content-between flex-wrap p-r-20 p-l-20 w-50">
+                    <div onclick="key_tap_dispose_raw('1')">1</div>
+                    <div onclick="key_tap_dispose_raw('2')">2</div>
+                    <div onclick="key_tap_dispose_raw('3')">3</div>
+                    <div onclick="key_tap_dispose_raw('4')">4</div>
+                    <div onclick="key_tap_dispose_raw('5')">5</div>
+                    <div onclick="key_tap_dispose_raw('6')">6</div>
+                    <div onclick="key_tap_dispose_raw('7')">7</div>
+                    <div onclick="key_tap_dispose_raw('8')">8</div>
+                    <div onclick="key_tap_dispose_raw('9')">9</div>
+                    <div onclick="key_tap_dispose_raw('-2')"><i class="fa fa-times"></i></div>
+                    <div onclick="key_tap_dispose_raw('0')">0</div>
+                    <div onclick="key_tap_dispose_raw('-1')"><i class="fa fa-arrow-left"></i></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="d-flex flex-row m-t-20">
+              <div class="signature-control w-50" style="height: 400px;">
+                <span class="f-s-15 f-w-700">Draw signature</span>
+                <div class="draw-control m-t-10 m-b-10">
+                  <button type="button" name="button" class="btn btn-sm btn-secondary" onclick="sign_erase()">Clear</button>
+                  <button type="button" name="button" class="btn btn-sm btn-secondary" onclick="sign_save()">Save</button>
+                </div>
+                <div class="signature">
+                  <img class="signature-image hide" src="" alt="Signature image" width='380' height='300'>
+                  <canvas class="signature-canvas" width='380' height='300' style="height: 300px; border: 1px solid #cacaca;"></canvas>
+                </div>
+              </div>
+              <div class="camera-control w-50" style="height: 400px;">
+                <span class="f-s-15 f-w-700">Take picture (optional)</span>
+                <div class="draw-control m-t-10 m-b-10">
+                  <button type="button" name="button" class="btn btn-sm btn-secondary" onclick="camera_snap()">Snap</button>
+                  <button type="button" name="button" class="btn btn-sm btn-secondary" onclick="camera_trigger(1)">Trigger</button>
+                </div>
+                <div class="camera">
+                  <video class="webcam" autoplay playsinline width="380" height="300" style="border: 1px solid #cacaca;"></video>
+                  <canvas class="canvas hide" class="d-none" width='380' height='300'></canvas>
+                  <audio class="snapSound" src="assets/notify.mp3" preload="auto"></audio>
+                  <img class="camera-image hide" src="" alt="Signature image" width='380' height='300'>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a href="javascript:;" class="btn btn-white" data-dismiss="modal">Cancel</a>
+          <a href="javascript:;" class="btn btn-danger confirm_dispose_raw">Dispose</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="text/javascript" src="assets/js/app.min.js"></script>
+  <script type="text/javascript" src="assets/plugins/moment/moment.min.js"></script>
+  <script type="text/javascript" src="assets/plugins/gritter/js/jquery.gritter.min.js"></script>
+  <script type="text/javascript" src="assets/plugins/swal/swal.min.js"></script>
+  <script type="text/javascript" src="assets/plugins/webcam/webcam.min.js"></script>
+  <script type="text/javascript" src="assets/js/default.min.js"></script>
+
+  <script type="text/javascript" src="assets/custom/data/data.js"></script>
+  <script type="text/javascript" src="assets/custom/js/api.js"></script>
+  <script type="text/javascript" src="assets/custom/js/functions.js"></script>
+  <script type="text/javascript" src="assets/custom/js/kitchen.js"></script>
+  <script type="text/javascript" src="assets/custom/js/raw-material.js"></script>
+  <script type="text/javascript" src="assets/custom/js/draw.js"></script>
+</body>
+
+</html>
