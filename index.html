@@ -41,21 +41,8 @@
           <a href="javascript:;" data-toggle="dropdown" class="notification-count dropdown-toggle f-s-14" aria-expanded="false">
             <i class="fa fa-bell"></i>
           </a>
-          <div data-scrollbar="true" data-height="100%"></div>
-          <div class="dropdown-menu media-list dropdown-menu-right notifications">
-            <div class="dropdown-header">NOTIFICATIONS (1)</div>
-            <a href="javascript:;" class="dropdown-item media">
-              <div class="media-left">
-                <i class="fa fa-circle fa-3x fa-user-circle"></i>
-              </div>
-              <div class="media-body">
-                <h6 class="media-heading"> Welcome back! You have logged in.</h6>
-                <div class="text-muted f-s-10">1 min ago</div>
-              </div>
-            </a>
-            <div class="dropdown-footer text-center">
-              <a href="javascript:;">Clear all</a>
-            </div>
+          <div class="dropdown-menu media-list dropdown-menu-right notifications" style="height: 500px; overflow-y: auto; overflow-x: hidden;">
+            
           </div>
         </li>
         <li class="dropdown navbar-user">
@@ -64,7 +51,7 @@
             <span class="d-none d-md-inline">Admin</span> <b class="caret"></b>
           </a>
           <div class="dropdown-menu dropdown-menu-right">
-            <a href="login.html" class="dropdown-item">Log Out</a>
+            <a href="login.html" class="dropdown-item" onclick="logout()">Log Out</a>
           </div>
         </li>
       </ul>
@@ -286,6 +273,7 @@
 
   <script type="text/javascript" src="assets/custom/data/data.js"></script>
   <script type="text/javascript" src="assets/custom/js/api.js"></script>
+  <script type="text/javascript" src="assets/custom/js/auth.js"></script>
   <script type="text/javascript" src="assets/custom/js/functions.js"></script>
   <script type="text/javascript" src="assets/custom/js/kitchen.js"></script>
   <script type="text/javascript" src="assets/custom/js/raw-material.js"></script>

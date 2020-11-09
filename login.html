@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<title>Kitchen app | Login Page</title>
+	<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" />
+	<meta content="" name="description" />
+	<meta content="" name="author" />
+
+	<!-- ================== BEGIN BASE CSS STYLE ================== -->
+	<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,600,700" rel="stylesheet" />
+	<link href="assets/css/app.min.css" rel="stylesheet" />
+	<!-- ================== END BASE CSS STYLE ================== -->
+</head>
+<body class="pace-top">
+	<!-- begin #page-loader -->
+	<div id="page-loader" class="fade show">
+		<span class="spinner"></span>
+	</div>
+	<!-- end #page-loader -->
+
+	<!-- begin #page-container -->
+	<div id="page-container" class="fade">
+		<!-- begin login -->
+		<div class="login login-with-news-feed">
+			<!-- begin news-feed -->
+			<div class="news-feed">
+				<div class="news-image" style="background-image: url(assets/img/login-bg.jpeg)"></div>
+				<div class="news-caption">
+					<h4 class="caption-title"><b>Kitchen</b> Admin App</h4>
+					<p>
+						You can login with dashboard account. Cook and dispose items and see reports and analyzed data from dashboard. 
+					</p>
+				</div>
+			</div>
+			<!-- end news-feed -->
+			<!-- begin right-content -->
+			<div class="right-content">
+				<!-- begin login-header -->
+				<div class="login-header">
+					<div class="brand">
+						<span class="logo"></span> <b>Kitchen</b> App
+					</div>
+					<div class="icon">
+						<i class="fa fa-sign-in-alt"></i>
+					</div>
+				</div>
+				<!-- end login-header -->
+				<div class="auth-failed m-t-20 hide">
+					<p class="text-danger">Invalid shop ID or KEY. Please check again.</p>
+				</div>
+				<!-- begin login-content -->
+				<div class="login-content">
+					<form id="loginForm" class="margin-bottom-0">
+						<div class="form-group m-b-15">
+							<input type="text" class="form-control form-control-lg" placeholder="Shop ID" name="shop_id" required/>
+						</div>
+						<div class="form-group m-b-15">
+							<input type="password" class="form-control form-control-lg" placeholder="KEY" name="key" required required/>
+						</div>
+						<div class="checkbox checkbox-css m-b-30">
+							<input type="checkbox" id="remember_me_checkbox" value="" checked/>
+							<label for="remember_me_checkbox">
+							Remember Me
+							</label>
+						</div>
+						<div class="login-buttons">
+							<button type="submit" class="btn btn-success btn-block btn-lg">Login</button>
+						</div>
+						<hr />
+						<p class="text-center text-grey-darker mb-0">
+							&copy; SBM tec All Right Reserved 2020
+						</p>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="assets/js/app.min.js"></script>
+	<script src="assets/js/default.min.js"></script>
+
+	<script src="assets/custom/js/auth.js"></script>
+
+</body>
+</html>

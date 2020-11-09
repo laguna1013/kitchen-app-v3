@@ -1,14 +1,17 @@
 let cook_option = "batch"; // Batch cook or amount cook
 let selected_item_id = -1;
-let defaultMaterialID = -1; // 默认选中的物料的id
+let defaultMaterialID = localStorage.getItem('selectedMaterialId') ? localStorage.getItem('selectedMaterialId') : -1; // 默认选中的物料的id
 let currentCode = -1; // 默认选中的物料的code;
 // App
 let init = () => {
+  // Welcome message
+  setTimeout(function() {
+    kitchen_notification('Welcome back, admin!', 'Please start cooking.', 'assets/img/media/user.png');
+  }, 1000);
   get_materials();
   setInterval(function () {
     get_materials();
-  }, 5 * 100000);
-
+  }, 5 * 1000);
   // 安全库存和每天开店要煮的
   setTimeout(function () {
     $idx = materials.filter((o) => o.cooked_items.length != 0).length;
@@ -16,20 +19,19 @@ let init = () => {
       // 如果都是空的那麽就顯示需要默認煮的數量
       materials.map((o) => {
         if (o["advise_dosage"] != 0) {
-          notify.push({
-            title: "Good Morning",
-            text:
-              "Please cook " + o["name"] + " with  " + o["advise_dosage"] + "g",
-            image: "assets/img/media/warning.png",
-            sticky: false,
-            time: 3000,
-            class_name: "my-sticky-class",
-          });
+          kitchen_notification(
+            'Good Morning', 
+            "Please cook " + o["name"] + " with  " + o["advise_dosage"] + "g", 
+            'assets/img/media/warning.png',
+            true,
+            3000,
+            false
+          );
         }
       });
       render_notification();
     }
-  }, 500000);
+  }, 5000);
   // time
   setInterval(function () {
     $(".timestamp").text(moment().format("HH:mm:ss DD, MMM YYYY"));
@@ -40,12 +42,12 @@ let init = () => {
 let render_item_list = () => {
   // Renders item on sidebar
   //let data = get_data(); // Need to be changed
-  data = materials;
+  data = [...materials];
   if (data.length == 0) {
     return;
   }
   $(".item-list").empty();
-  data.map((item) => {
+  data.forEach((item) => {
     $idx = 0;
     // 初始化bar的颜色
     item["cooked_items"].map((o) => {
@@ -63,30 +65,38 @@ let render_item_list = () => {
     if ($idx == 0) {
       item["cooked_items"].map((o) => {
         // 检查过期的库存
-        if (
-          o.remaining_amount > 0 &&
-          get_time_to_disposal(item.best_serving_hours, o.cooked_on).replace(
-            "mins",
-            ""
-          ) *
-            1 <
-            0
-        ) {
+        if ( o.remaining_amount > 0 && get_time_to_disposal(item.best_serving_hours, o.cooked_on).replace("mins", "") * 1 < 0 ) {
+          // Best serving hour elapsed notification | Not tested yet
+          kitchen_notification(
+            `${ item.name } is almost out of best serving hours`,
+            `${ item.name } cooked long ago and quality went bad. Please dispose this item cook again.`,
+            'assets/img/media/danger.png',
+            true,
+            5000,
+            true
+          );
           o["barColor"] = "grey";
           $idx++;
         }
       });
-
       // 计算所有批次的总量
       $totalStock = 0;
       for ($i = 0; $i < item["cooked_items"].length; $i++) {
         $totalStock += item["cooked_items"][$i]["remaining_amount"] * 1;
       }
-
       if ($totalStock < (item["safety_level"] * item["maximum_amount"]) / 100) {
         $idx++;
         item["cooked_items"].map((o) => {
           // 检查有无负库存
+          // Below safety level notification | Not tested yet
+          kitchen_notification(
+            `${ item.name } is below safety level`,
+            `You are running out of ${ item.name } and need to cook more.`,
+            'assets/img/media/danger.png',
+            true,
+            5000,
+            true
+          );
           o["barColor"] = "yellow";
         });
       }
@@ -109,7 +119,6 @@ let render_item_list = () => {
 					<a href="javascript:;" class="d-flex align-items-center justify-content-start" onclick="select_item('${item.id}')">
 						<img src="image/${item.id}.jpg" class="widget-img widget-img-sm rounded"/>
 						<p class="w-50 m-0 m-l-10">${item.name}</p>
-
 					</a>
 				</li>
 			`;
@@ -119,8 +128,12 @@ let render_item_list = () => {
 
   if (defaultMaterialID == -1) {
     select_item(data[0].id);
-    if (data.length != 0) defaultMaterialID = data[0].id;
+    if (data.length != 0) {
+      defaultMaterialID = data[0].id;
+      localStorage.setItem('selectedMaterialId', defaultMaterialID);
+    }
   } else {
+    select_item(defaultMaterialID)
     render_item_detail(defaultMaterialID);
   }
 };
@@ -129,12 +142,13 @@ let render_item_list = () => {
 let select_item = (id) => {
   // Select an item from item list
   selected_item_id = id;
+  defaultMaterialID = id;
+  localStorage.setItem('selectedMaterialId', defaultMaterialID);
   $(".item").removeClass("active");
   $(".raw-material").removeClass("active");
   $(`li[data-item-id=${id}]`).addClass("active");
   $(".item-details").parent().find(".widget-header-title").text("Item details");
   render_item_detail(id);
-  defaultMaterialID = id;
 };
 
 // 选择 左边列表后的右边样式
@@ -510,6 +524,37 @@ let confirm_cook_item = (id) => {
       false,
       5000
     );
+    // History
+    let req = {
+      shop_id: JSON.parse(localStorage.getItem('kitchenLogin'))['shop_id'],
+      item_id: item.id,
+      item_code: item.code,
+      item_name: item.name,
+      type: 'cooking_start',
+      amount: (() => {
+        if (cook_option != "batch") {
+          return amount;
+        } else {
+          if (sm) {
+            return amount;
+          } else {
+            return batch * amount;
+          }
+        }
+      })(),
+      reason: (() => {
+        if (cook_option != "batch") {
+          return 'Custom amount';
+        } else {
+          if (sm) {
+            return 'Small batch';
+          } else {
+            return `${batch} batches.`;
+          }
+        }
+      })()
+    }
+    kitchen_history(req);
   }
   //set_data(data);
   render_item_detail(id);
@@ -582,6 +627,16 @@ let ready_item = (item_id, cooking_item_id, isReady) => {
           false,
           5000
         );
+        let req = {
+          shop_id: JSON.parse(localStorage.getItem('kitchenLogin'))['shop_id'],
+          item_id: item.id,
+          item_code: item.code,
+          item_name: item.name,
+          type: isReady ? 'cooking_finished' : 'dispose',
+          amount: cooked_item.cooked_amount,
+          reason: isReady ? 'Cooking has been finished' : 'Quality is not good'
+        }
+        kitchen_history(req);
         if (isReady) {
           print_cooked_item(cooking_item, item);
         }
@@ -718,6 +773,16 @@ let confirm_dispose_item = (item_id, cooked_item_id) => {
         false,
         5000
       );
+      let req = {
+        shop_id: JSON.parse(localStorage.getItem('kitchenLogin'))['shop_id'],
+        item_id: item.id,
+        item_code: item.code,
+        item_name: item.name,
+        type: 'dispose',
+        amount: disposal_amount,
+        reason: disposal_reason
+      }
+      kitchen_history(req);
       //set_data(data);
       render_item_detail(item_id);
     }
@@ -805,7 +870,6 @@ function addOrChangeCookItem($cookJson) {
     async: false,
     beforeSend: function () {},
     success: function (data) {
-      console.log(data);
       $flag = data == 1;
     },
     error: function (data) {

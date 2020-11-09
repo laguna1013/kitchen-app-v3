@@ -1,7 +1,7 @@
 /* width */
 ::-webkit-scrollbar {
-  width: 5px;
-  height: 5px;
+  width: 7px;
+  height: 7px;
 }
 
 /* Track */
@@ -134,4 +134,8 @@
 }
 .raw-material-list li.active .widget-list-item {
   background: rgba(100, 0, 0, 0.1);
+}
+body #gritter-notice-wrapper .gritter-item-wrapper {
+  width: 350px;
+  margin: 10px 75px;
 }
