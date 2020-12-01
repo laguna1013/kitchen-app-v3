@@ -262,5 +262,4 @@ $('.confirm_dispose_raw').click(function(){
     dispose_raw_confirm(selected_raw_id);
 })
 $(document).ready(function(){
-    //https://www.imdb.com/title/tt2177819/
 })
