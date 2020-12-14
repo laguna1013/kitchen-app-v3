@@ -1,5 +1,6 @@
 let materials = [];
 let notify = [];
+let audio = undefined;
 // 获得materials的档案，只获取material的内容不获取具体数据
 let get_materials = () => {
   $.ajax({
@@ -129,6 +130,18 @@ let get_time_to_disposal = (bs_hr, cooked_time) => {
   // })
 };
 
+let play_sound = (sound_file) => {
+  let current = new Date().getTime()
+  let last_sound_played_time = localStorage.getItem('last_sound_played_time') ? localStorage.getItem('last_sound_played_time') : 0
+  if((last_sound_played_time == 0) || ((current - last_sound_played_time) > 10 * 1000)){
+    audio = new Audio(sound_file)
+    audio.play()
+    localStorage.setItem('last_sound_played_time', new Date().getTime())
+  }else{
+    return
+  }
+}
+
 let generate_id = () => {
   return "_" + Math.random().toString(36).substr(2, 9);
 };
@@ -139,7 +152,8 @@ let kitchen_notification = (
   image = "",
   sticky = false,
   time = 3000,
-  play_sound = false
+  play_sound = false,
+  sound_file = 'assets/notify.mp3'
 ) => {
   // Add notifications to local storage
   let notifications = [];
@@ -156,8 +170,13 @@ let kitchen_notification = (
   })
   if(!dup){
     if (play_sound) {
-      let audio = new Audio("assets/notify.mp3");
-      audio.play();
+      let current = new Date().getTime()
+      let last_sound_played_time = localStorage.getItem('last_sound_played_time') ? localStorage.getItem('last_sound_played_time') : 0
+      if((last_sound_played_time == 0) || ((current - last_sound_played_time) > 10 * 1000)){
+        audio = new Audio(sound_file)
+        audio.play()
+        localStorage.setItem('last_sound_played_time', new Date().getTime())
+      }
     }
     notifications.unshift({
       id: generate_id(),
@@ -173,6 +192,12 @@ let kitchen_notification = (
       sticky: sticky,
       time: time,
       class_name: "my-sticky-class",
+      after_close: () => {
+        if(play_sound && audio){
+          audio.pause()
+          audio.currentTime = 0
+        }
+      }
     });
     localStorage.setItem("kitchenNotifications", JSON.stringify(notifications));
   }
@@ -211,7 +236,7 @@ let render_notification = () => {
           </div>
           <div class="media-body" style="min-width: 300px">
             <h6 class="media-heading"> ${item.title} </h6>
-            <span style="white-space: break-spaces;">${item.text}</span>
+            <span style="white-space: normal;">${item.text}</span>
             <div class="text-muted f-s-10">${get_elapsed_time_string(
               get_elapsed_hr_min(item.timestamp)
             )} ago</div>
@@ -232,6 +257,37 @@ let clear_notifications = () => {
   render_notification();
 };
 
+let save_batch_info = (data) => {
+  let batch_info = localStorage.getItem('BATCH_INFORMATION') ? [...JSON.parse(localStorage.getItem('BATCH_INFORMATION'))] : []
+  batch_info.push(data)
+  localStorage.setItem('BATCH_INFORMATION', JSON.stringify(batch_info))
+}
+
+let get_last_batch_number = (item_id) => {
+  let batch_info = localStorage.getItem('BATCH_INFORMATION') ? [...JSON.parse(localStorage.getItem('BATCH_INFORMATION'))] : []
+  let ret = 0
+  batch_info.forEach(item => {
+    if(item.item_id == item_id){
+      ret = item.batch_number
+    }
+  })
+  return ret
+}
+
+let get_batch_number = (batch_item_id) => {
+  let batch_info = localStorage.getItem('BATCH_INFORMATION') ? [...JSON.parse(localStorage.getItem('BATCH_INFORMATION'))] : []
+  let ret = batch_info.filter(item => item.batch_item_id == batch_item_id)[0]
+  if(ret){
+    return ret.batch_number
+  }else{
+    return '-1'
+  }
+}
+
+let clear_batch_info = () => {
+  localStorage.removeItem('BATCH_INFORMATION')
+}
+
 async function upload_history (data) {
   let res;
   try{
@@ -251,4 +307,17 @@ let kitchen_history = (req) => {
   upload_history(req).then((res, err) => {
     console.log(res)
   })
+}
+
+let add_disposal_history = (data) => {
+  let disposals = localStorage.getItem('DISPOSAL_HISTORY') ? JSON.parse(localStorage.getItem('DISPOSAL_HISTORY')) : []
+  disposals.push(data)
+  localStorage.setItem('DISPOSAL_HISTORY', JSON.stringify(disposals))
+}
+let get_disposal_history = (id) => {
+  let disposals = localStorage.getItem('DISPOSAL_HISTORY') ? JSON.parse(localStorage.getItem('DISPOSAL_HISTORY')) : []
+  return disposals
+}
+let clear_disposal_history = () => {
+  localStorage.removeItem('DISPOSAL_HISTORY')
 }

@@ -11,24 +11,52 @@ let init = () => {
   get_materials();
   setInterval(function () {
     get_materials();
+    if(materials){
+      materials.forEach(item => {
+        if(item.cooking_items.length > 0){
+          item.cooking_items.forEach(_item => {
+            let currentCookingMin = get_elapsed_hr_min(_item.started_cooking_time).min + get_elapsed_hr_min(_item.started_cooking_time).hr * 60;
+            if(currentCookingMin >= item.cooking_time){
+              kitchen_notification(
+                `${ item.name } is ready.`,
+                `Please check the quality and serve.`,
+                'assets/img/media/success.png',
+                true,
+                5000,
+                true,
+                'assets/alarm.mp3'
+              );
+            }
+          })
+        }
+      })
+    }
   }, 5 * 1000);
   // 安全库存和每天开店要煮的
   setTimeout(function () {
     $idx = materials.filter((o) => o.cooked_items.length != 0).length;
     if ($idx == 0) {
       // 如果都是空的那麽就顯示需要默認煮的數量
+      let items_tag = ``
       materials.map((o) => {
         if (o["advise_dosage"] != 0) {
-          kitchen_notification(
-            'Good Morning',
-            "Please cook " + o["name"] + " with  " + o["advise_dosage"] + "g",
-            'assets/img/media/warning.png',
-            true,
-            3000,
-            false
-          );
+          items_tag += `
+            <div class="d-flex">
+              <span class="f-w-700">${o["name"]} - </span>
+              <span class="ml-2">${o["advise_dosage"]}g</span>
+            </div>
+          `
         }
       });
+      kitchen_notification(
+        'Good Morning, Please cook these items.',
+        items_tag,
+        'assets/img/media/warning.png',
+        true,
+        3000,
+        true,
+        'assets/alarm.mp3'
+      );
       render_notification();
     }
   }, 5000);
@@ -228,6 +256,7 @@ let render_item_detail = (id) => {
                     <div class="batch d-flex justify-content-between aligh-items-center m-b-15">
                       <div class="batch-info m-r-15" style="width: 85%;">
                         <div class="widget-chart-info-progress d-flex justify-content-between">
+                          <div>#${get_batch_number(_item.id)}</div>
                           <div>
                             <b>Started: ${moment(_item.started_cooking_time, "MM-DD HH:mm" ).format("HH:mm")}</b>
                             <span>(${get_elapsed_time_string(get_elapsed_hr_min(_item.started_cooking_time))} ago)</span>
@@ -241,6 +270,7 @@ let render_item_detail = (id) => {
                       </div>
                       ${ (() => {
                         if(currentCookingMin >= item.cooking_time){
+                          //
                           return `<button class="btn btn-sm btn-primary d-flex align-items-center m-l-5 width-90 p-l-5 p-r-5" type="button" name="button" onclick="ready_item('${ item.id }', '${ _item.id }',true)">
                                     <i class="fa fa-check m-r-5"></i>Ready
                                   </button>`;
@@ -336,7 +366,20 @@ let render_item_detail = (id) => {
         <div class="d-flex justify-content-between align-items-center">
           <div>
             <h4 class="widget-chart-info-title">Disposal info</h4>
-            <p class="widget-chart-info-desc">You disposed 3 times, total 2400 (g) of item today</p>
+            <p class="widget-chart-info-desc">${
+              (() =>{
+                let qty = 0
+                let amount = 0
+                let disposals = get_disposal_history()
+                disposals.forEach(disposal => {
+                  if(disposal.item_id == item.id){
+                    qty++
+                    amount += parseInt(disposal.amount)
+                  }
+                })
+                return qty != 0 ? `You disposed ${qty} times today. Total disposal amount is ${amount}g` : `There are no disposal for this item. `
+              })()
+            }</p>
           </div>
           <button class="btn btn-md btn-indigo width-90" type="button" name="button" onclick="dispose_history(${item.id})">
             <i class="fa fa-history m-r-5"></i>History
@@ -403,6 +446,19 @@ let cook_option_render = (id) => {
                   <input class="custom-control-input" type="radio" name="batch_count" id="batch_3" value="3">
                   <label class="custom-control-label" for="batch_3">3 batches (${item.maximum_amount * 3} g)</label>
                 </div>
+                <div class="custom-control custom-radio m-b-10 d-flex align-items-center">
+                  <input class="custom-control-input" type="radio" name="batch_count" id="batch_custom" value="4">
+                  <label class="custom-control-label" for="batch_custom">Custom batches</label>
+                  <div class="custom_batch_amount d-none align-items-center ml-5 justify-content-around" style="width: 160px">
+                    <a class="btn btn-primary btn-icon btn-circle btn-lg custom_batch_minus">
+                      <i class="fas fa-minus text-white"></i>
+                    </a>
+                    <input type="number" step="1" max="100" min="1" id="custom_batch_amount" value="4"/>
+                    <a class="btn btn-primary btn-icon btn-circle btn-lg custom_batch_plus">
+                      <i class="fas fa-plus text-white"></i>
+                    </a>
+                  </div>
+                </div>
               `;
             }else{
               return `
@@ -435,14 +491,37 @@ let cook_option_render = (id) => {
     `;
   $(".cook_option").empty();
   $(".cook_option").append($(template));
+  $("input[name='batch_count']").click(function(){
+    if($(this).prop('id') == 'batch_custom'){
+      $(".custom_batch_amount").addClass('d-flex')
+      $(".custom_batch_amount").removeClass('d-none')
+    }else{
+      $(".custom_batch_amount").removeClass('d-flex')
+      $(".custom_batch_amount").addClass('d-none')
+    }
+  })
+  $("#custom_batch_amount").change(function(){
+    $("#batch_custom").val($(this).val())
+  })
+  $('.custom_batch_minus').click(function(){
+    if(parseInt($("#custom_batch_amount").val()) > 1){
+      $("#custom_batch_amount").val(parseInt($("#custom_batch_amount").val()) - 1)
+    }
+  })
+  $('.custom_batch_plus').click(function(){
+    $("#custom_batch_amount").val(parseInt($("#custom_batch_amount").val()) + 1)
+  })
 };
 
 // 點擊確認cook按鈕
 let confirm_cook_item = (id) => {
   //let data = get_data();
+  let last_batch_number = 0
   cookingList = [];
   data = materials;
   let item = [...data.filter((item) => item.id == id)][0];
+
+  last_batch_number = get_last_batch_number(id)
   let amount = 0;
   let batch = $('input[name="batch_count"]:checked').val();
   let sm = false;
@@ -464,30 +543,22 @@ let confirm_cook_item = (id) => {
       id: generate_id(),
       cooking_amount: amount,
       started_cooking_time: moment().format("MM-DD HH:mm"),
+      batch_number: last_batch_number + 1
     });
-    // item.cooking_items.push({
-    // id: generate_id(),
-    // cooking_amount: amount,
-    // started_cooking_time: moment().format('MM-DD HH:mm')
-    // })
   }
   if (batch == 0) {
     batch++;
     sm = true;
   }
   for (let i = 0; i < batch; i++) {
+    last_batch_number++
     cookingList.push({
       id: generate_id(),
       cooking_amount: amount,
       started_cooking_time: moment().format("MM-DD HH:mm"),
+      batch_number: last_batch_number
     });
-    // item.cooking_items.push({
-    // id: generate_id(),
-    // cooking_amount: amount,
-    // started_cooking_time: moment().format('MM-DD HH:mm')
-    // })
   }
-
   $hasSuccess = true;
   for ($i = 0; $i < cookingList.length; $i++) {
     $requestJson = cookingList[$i];
@@ -498,11 +569,20 @@ let confirm_cook_item = (id) => {
         id: cookingList[$i]["id"],
         cooking_amount: cookingList[$i]["cooking_amount"],
         started_cooking_time: cookingList[$i]["started_cooking_time"],
+        batch_number: cookingList[$i]["last_batch_number"]
       });
     } else {
       $hasSuccess = false;
     }
   }
+
+  cookingList.forEach(item => {
+    save_batch_info({
+      item_id: id,
+      batch_item_id: item.id,
+      batch_number: item.batch_number
+    })
+  })
 
   $("#cook-item-modal").modal("hide");
 
@@ -773,6 +853,13 @@ let confirm_dispose_item = (item_id, cooked_item_id) => {
         false,
         5000
       );
+      add_disposal_history({
+        uid: generate_id(),
+        item_id: item.id,
+        amount: disposal_amount,
+        reason: disposal_reason,
+        time: moment().format('YYYY-MM-DD hh:mm:ss')
+      })
       let req = {
         shop_id: JSON.parse(localStorage.getItem('kitchenLogin'))['shop_id'],
         item_id: item.id,
@@ -790,7 +877,50 @@ let confirm_dispose_item = (item_id, cooked_item_id) => {
 };
 
 let dispose_history = (id) => {
-
+  let disposals = get_disposal_history().filter(item => item.item_id == id)
+  $("#disposal-history-modal").modal("show");
+  let tag = `There are no disposals today.`
+  if(disposals.length > 0){
+    let tds = ``
+    let total_amount = 0
+    disposals.forEach((item, idx) => {
+      total_amount += parseInt(item.amount)
+      tds += `
+        <tr>
+          <td>${idx+1}</td>
+          <td>${moment(item.timestamp).format('DD ddd, MMM')}</td>
+          <td>${item.amount}g</td>
+          <td>${item.reason}</td>
+        </tr>
+      `
+    })
+    tag = `
+      <div>
+        <table class="table table-striped">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Timestamp</th>
+              <th>Amount</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${
+              tds
+            }
+            <tr>
+              <td>-</td>
+              <td>Total disposal amount</td>
+              <td class="text-red">${total_amount}g</td>
+              <td>-</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    `
+  }
+  $("#disposal-history-modal .disposal_history").html(tag)
 };
 let soldout_item = (id) => {
   let data = materials;
@@ -958,7 +1088,13 @@ $(".confirm_dispose_item").click(function () {
   );
 });
 
+$('.clear_history').click(function(){
+  clear_disposal_history()
+})
+
 let print_cooked_item = (cooking_item, item) => {
+  let batch_number = get_batch_number(cooking_item.id) ? get_batch_number(cooking_item.id) : 'Unset'
+  console.log(batch_number)
   var print_window = window.open(
     "",
     "PRINT Cooked item",
@@ -1003,6 +1139,7 @@ let print_cooked_item = (cooking_item, item) => {
               <div>
                 <h3>Name: ${item.name}</h3>
                 <h3>Amount: ${cooking_item.cooking_amount} g</h3>
+                <h3>Batch number: #${batch_number}</h3>
                 <h3>Cooking started on: ${moment(
                   cooking_item.started_cooking_time,
                   "MM-DD HH:mm"
