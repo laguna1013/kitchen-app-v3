@@ -20,8 +20,8 @@ let init = () => {
       materials.map((o) => {
         if (o["advise_dosage"] != 0) {
           kitchen_notification(
-            'Good Morning', 
-            "Please cook " + o["name"] + " with  " + o["advise_dosage"] + "g", 
+            'Good Morning',
+            "Please cook " + o["name"] + " with  " + o["advise_dosage"] + "g",
             'assets/img/media/warning.png',
             true,
             3000,
@@ -790,7 +790,7 @@ let confirm_dispose_item = (item_id, cooked_item_id) => {
 };
 
 let dispose_history = (id) => {
-  
+
 };
 let soldout_item = (id) => {
   let data = materials;

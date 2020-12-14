@@ -27,6 +27,26 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
+.sidebar-scroll{
+  height: 100%;
+  overflow: auto;
+}
+.sidebar-scroll::-webkit-scrollbar {
+  width: 20px;
+}
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: #2d353c;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background: #242b30;
+  width: 20px;
+  border-radius: 10px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
 .item .label {
   position: absolute;
   top: 0px;
