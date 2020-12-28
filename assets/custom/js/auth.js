@@ -34,12 +34,13 @@ $('#loginForm').submit(function(e){
   let key = $('#loginForm input[name="key"]').val();
   login(name, key).then((res, err) => {
     if(err) $('.auth-failed').removeClass('hide');
-    if(JSON.parse(res)['res'] == 1){
+    if(JSON.parse(res)['res'] != 0){
       $('.auth-failed').addClass('hide');
       localStorage.setItem('kitchenLogin', JSON.stringify({
         shop_id: name,
         key: key
       }))
+      localStorage.setItem('currentKitchenUser', res)
       if($('#remember_me_checkbox:checked').length != 0){
         localStorage.setItem('kitchenRememberMe', JSON.stringify({
           shop_id: name,

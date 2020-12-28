@@ -266,11 +266,19 @@ let save_batch_info = (data) => {
 let get_last_batch_number = (item_id) => {
   let batch_info = localStorage.getItem('BATCH_INFORMATION') ? [...JSON.parse(localStorage.getItem('BATCH_INFORMATION'))] : []
   let ret = 0
+  let last_timestamp
   batch_info.forEach(item => {
     if(item.item_id == item_id){
       ret = item.batch_number
+      last_timestamp = item.timestamp
     }
   })
+  if(batch_info.length == 0){
+    return 0
+  }
+  if(Math.abs(moment().diff(moment(last_timestamp), 'days')) >= 1){
+    return 0
+  }
   return ret
 }
 
@@ -280,7 +288,7 @@ let get_batch_number = (batch_item_id) => {
   if(ret){
     return ret.batch_number
   }else{
-    return '-1'
+    return ''
   }
 }
 
@@ -302,13 +310,75 @@ async function upload_history (data) {
     return err;
   }
 }
-
+async function upload_kitchen_item_deduct (data) {
+  let res;
+  try{
+    Pace.restart()
+    res = await $.ajax({
+      url: API_URL + '/kitchen_item_use',
+      data: data,
+      method: 'post'
+    })
+    return res;
+  }catch(err){
+    return err;
+  }
+}
+async function get_purchasing_item (data) {
+  let res;
+  try{
+    Pace.restart()
+    res = await $.ajax({
+      url: API_URL + '/kitchen_get_purchasing_item',
+      data: data,
+      method: 'post'
+    })
+    return res;
+  }catch(err){
+    return err;
+  }
+}
 let kitchen_history = (req) => {
+  console.log(req)
   upload_history(req).then((res, err) => {
     console.log(res)
   })
 }
+let get_qty_change = (packing_info, amount) => {
+  let res = {
+    primary: 0,
+    secondary: 0
+  }
+  if(packing_info.includes(' ') && packing_info.includes('/')){
+    let sp_qty = packing_info.split(' ')[1].split('/')[0].replace(/\D/g, "")
+    let small_qty = packing_info.split(' ')[0].split('/')[0].replace(/\D/g, "")
 
+    res.secondary = Math.round(amount / small_qty)
+    res.primary = Math.floor(res.secondary / sp_qty)
+    res.secondary = res.secondary - res.primary * sp_qty
+  }
+  return res
+}
+let kitche_item_deduct = (req) => {
+  let user = JSON.parse(localStorage.getItem('currentKitchenUser'))
+  get_purchasing_item({...req,
+    company: user.res[0].company
+  }).then((res, err) => {
+    let item = JSON.parse(res).res[0]
+      upload_kitchen_item_deduct({
+        ...req,
+        purchasing_item_id: item.id,
+        primary_qty_change: get_qty_change(item.packing_info, req.amount).primary,
+        secondary_qty_change: get_qty_change(item.packing_info, req.amount).secondary,
+        shop_name: user.res[0].shop_name,
+        company: user.res[0].company,
+        branch_id: user.res[0].branch_id
+      }).then((res2, err2) => {
+        console.log(res2)
+      })
+    }
+  )
+}
 let add_disposal_history = (data) => {
   let disposals = localStorage.getItem('DISPOSAL_HISTORY') ? JSON.parse(localStorage.getItem('DISPOSAL_HISTORY')) : []
   disposals.push(data)

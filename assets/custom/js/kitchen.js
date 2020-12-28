@@ -12,6 +12,7 @@ let init = () => {
   setInterval(function () {
     get_materials();
     if(materials){
+      //console.log(materials)
       materials.forEach(item => {
         if(item.cooking_items.length > 0){
           item.cooking_items.forEach(_item => {
@@ -62,6 +63,7 @@ let init = () => {
   }, 5000);
   // time
   setInterval(function () {
+
     $(".timestamp").text(moment().format("HH:mm:ss DD, MMM YYYY"));
   }, 1000);
 };
@@ -395,21 +397,45 @@ let render_item_detail = (id) => {
 // 点击cook按钮
 let cook_item = (id) => {
   //let data = get_data();
-  data = materials;
-  let item = [...data.filter((item) => item.id == id)][0];
-  $("#cook-item-modal .modal-header h4").text(
-    "You are going to cook " + item.name
-  );
-  $("#cook-item-modal input").attr("item-id", id);
-  cook_option = "batch";
-  if (cook_option == "batch") {
-    $('#cook-item-modal input[value="batch"]').prop("checked", true);
-  } else {
-    $('#cook-item-modal input[value="amount"]').prop("checked", true);
+  let can_cook = true
+  let pending_item = []
+  materials.forEach(item => {
+    if(item.id == id){
+      item.cooking_items.forEach(_item => {
+        let currentCookingMin = get_elapsed_hr_min(_item.started_cooking_time).min + get_elapsed_hr_min(_item.started_cooking_time).hr * 60;
+        if(currentCookingMin >= item.cooking_time){
+          can_cook = false
+          pending_item = {...item}
+        }
+      })
+    }
+  })
+  if(can_cook){
+    data = materials;
+    let item = [...data.filter((item) => item.id == id)][0];
+    $("#cook-item-modal .modal-header h4").text(
+      "You are going to cook " + item.name
+    );
+    $("#cook-item-modal input").attr("item-id", id);
+    cook_option = "batch";
+    if (cook_option == "batch") {
+      $('#cook-item-modal input[value="batch"]').prop("checked", true);
+    } else {
+      $('#cook-item-modal input[value="amount"]').prop("checked", true);
+    }
+    $("#cook-item-modal").attr("item-id", id);
+    cook_option_render(id);
+    $("#cook-item-modal").modal("show");
+  }else{
+    kitchen_notification(
+      "You can't start cooking" + ` ${pending_item.name}`,
+      `You have ready items to be finished cooking. Please finish these items and try again.`,
+      "assets/img/media/danger.png",
+      false,
+      5000
+    );
   }
-  $("#cook-item-modal").attr("item-id", id);
-  cook_option_render(id);
-  $("#cook-item-modal").modal("show");
+
 };
 let cook_option_render = (id) => {
   let data = materials;
@@ -515,7 +541,7 @@ let cook_option_render = (id) => {
 
 // 點擊確認cook按鈕
 let confirm_cook_item = (id) => {
-  //let data = get_data();
+//let data = get_data();
   let last_batch_number = 0
   cookingList = [];
   data = materials;
@@ -580,7 +606,8 @@ let confirm_cook_item = (id) => {
     save_batch_info({
       item_id: id,
       batch_item_id: item.id,
-      batch_number: item.batch_number
+      batch_number: item.batch_number,
+      timestamp: moment().format('YYYY-MM-DD HH:mm:ss')
     })
   })
 
@@ -638,6 +665,7 @@ let confirm_cook_item = (id) => {
   }
   //set_data(data);
   render_item_detail(id);
+
 };
 
 // 点击完成按钮
@@ -870,6 +898,8 @@ let confirm_dispose_item = (item_id, cooked_item_id) => {
         reason: disposal_reason
       }
       kitchen_history(req);
+
+      kitche_item_deduct(req);
       //set_data(data);
       render_item_detail(item_id);
     }
@@ -1091,7 +1121,6 @@ $(".confirm_dispose_item").click(function () {
 $('.clear_history').click(function(){
   clear_disposal_history()
 })
-
 let print_cooked_item = (cooking_item, item) => {
   let batch_number = get_batch_number(cooking_item.id) ? get_batch_number(cooking_item.id) : 'Unset'
   console.log(batch_number)
