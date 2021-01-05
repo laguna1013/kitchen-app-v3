@@ -391,3 +391,9 @@ let get_disposal_history = (id) => {
 let clear_disposal_history = () => {
   localStorage.removeItem('DISPOSAL_HISTORY')
 }
+
+
+let start_new_day = () => {
+  
+  clear_batch_info()
+}

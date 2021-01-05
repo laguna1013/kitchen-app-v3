@@ -5,9 +5,17 @@ let currentCode = -1; // 默认选中的物料的code;
 // App
 let init = () => {
   // Welcome message
-  setTimeout(function() {
-    kitchen_notification('Welcome back, admin!', 'Please start cooking.', 'assets/img/media/user.png');
-  }, 1000);
+  // setTimeout(function() {
+  //   kitchen_notification('Welcome back, admin!', 'Please start cooking.', 'assets/img/media/user.png');
+  //   // $.gritter.add({
+  //   //   title: `Welcome back, admin!`,
+  //   //   text: `Please start cooking.`,
+  //   //   image: "assets/img/media/user.png",
+  //   //   sticky: false,
+  //   //   time: 5000,
+  //   //   class_name: "my-sticky-class"
+  //   // });
+  // }, 1000);
   get_materials();
   setInterval(function () {
     get_materials();
@@ -61,9 +69,13 @@ let init = () => {
       render_notification();
     }
   }, 5000);
+
   // time
   setInterval(function () {
-
+    let time = moment().format('HH:mm:ss')
+    if((time == '23:59:59') || (time == '00:00:00')){
+      start_new_day()
+    }
     $(".timestamp").text(moment().format("HH:mm:ss DD, MMM YYYY"));
   }, 1000);
 };
@@ -237,8 +249,14 @@ let render_item_detail = (id) => {
         <div class="d-flex justify-content-between align-items-center position-sticky top-0 m-b-10" style="top: 0; background: white; border-bottom: 1px solid rgba(0,0,0,.1);">
           <div>
             ${(() => {
-              if (item.cooking_items.length != 0) {
-                return `<h4 class="widget-chart-info-title">Current cooking (${item.cooking_items.length})</h4><p class="widget-chart-info-desc m-b-10">You are cooking ${item.cooking_items.length} batch at the moment. Please check quality before the food is ready.</p>`;
+              let cooking_items_count = 0
+              item.cooking_items.forEach(_item => {
+                if(_item.has_dispose != 1){
+                  cooking_items_count ++
+                }
+              })
+              if (cooking_items_count != 0) {
+                return `<h4 class="widget-chart-info-title">Current cooking (${cooking_items_count})</h4><p class="widget-chart-info-desc m-b-10">You are cooking ${item.cooking_items.length} batch at the moment. Please check quality before the food is ready.</p>`;
               } else {
                 return `<h4 class="widget-chart-info-title">There are no cooking items.</h4>`;
               }
@@ -248,7 +266,13 @@ let render_item_detail = (id) => {
         <div class="cooking-batches">
           ${(() => {
             // Cooking items
-            if (item.cooking_items.length != 0) {
+            let cooking_items_count = 0
+            item.cooking_items.forEach(_item => {
+              if(_item.has_dispose != 1){
+                cooking_items_count ++
+              }
+            })
+            if (cooking_items_count != 0) {
               let cooking_items = ``;
               item.cooking_items.map((_item) => {
                 if (!_item["has_dispose"]) {
@@ -403,7 +427,7 @@ let cook_item = (id) => {
     if(item.id == id){
       item.cooking_items.forEach(_item => {
         let currentCookingMin = get_elapsed_hr_min(_item.started_cooking_time).min + get_elapsed_hr_min(_item.started_cooking_time).hr * 60;
-        if(currentCookingMin >= item.cooking_time){
+        if((currentCookingMin >= item.cooking_time) && (_item.has_dispose != 1)){
           can_cook = false
           pending_item = {...item}
         }
@@ -427,13 +451,14 @@ let cook_item = (id) => {
     cook_option_render(id);
     $("#cook-item-modal").modal("show");
   }else{
-    kitchen_notification(
-      "You can't start cooking" + ` ${pending_item.name}`,
-      `You have ready items to be finished cooking. Please finish these items and try again.`,
-      "assets/img/media/danger.png",
-      false,
-      5000
-    );
+    $.gritter.add({
+      title: `You can't start cooking ${pending_item.name}`,
+      text: `You have ready items to be finished cooking. Please finish these items and try again.`,
+      image: "assets/img/media/danger.png",
+      sticky: false,
+      time: 5000,
+      class_name: "my-sticky-class"
+    });
   }
 
 };
@@ -685,7 +710,7 @@ let ready_item = (item_id, cooking_item_id, isReady) => {
 
   let txt = "Please checkout the quality of the food. You can not revert this action. Do you guarantee the quality of food?";
   if (!isReady) {
-    txt = "You well dispose the batch of food. You can not revert this action. Do you guarantee the the food is really bad?";
+    txt = "You are going to dispose the batch of food. You can not revert this action. Do you guarantee the the food is really bad?";
   }
   swal({
     title: "Are you sure?",
@@ -735,6 +760,7 @@ let ready_item = (item_id, cooking_item_id, isReady) => {
           false,
           5000
         );
+
         let req = {
           shop_id: JSON.parse(localStorage.getItem('kitchenLogin'))['shop_id'],
           item_id: item.id,
@@ -747,6 +773,15 @@ let ready_item = (item_id, cooking_item_id, isReady) => {
         kitchen_history(req);
         if (isReady) {
           print_cooked_item(cooking_item, item);
+        }else{
+          kitche_item_deduct(req);
+          add_disposal_history({
+            uid: generate_id(),
+            item_id: item.id,
+            amount: cooked_item.cooked_amount,
+            reason: 'Quality is not good',
+            time: moment().format('YYYY-MM-DD hh:mm:ss')
+          })
         }
       }
     }
@@ -918,7 +953,7 @@ let dispose_history = (id) => {
       tds += `
         <tr>
           <td>${idx+1}</td>
-          <td>${moment(item.timestamp).format('DD ddd, MMM')}</td>
+          <td>${moment(item.timestamp).format('MM-DD HH:mm:ss')}</td>
           <td>${item.amount}g</td>
           <td>${item.reason}</td>
         </tr>
@@ -1123,7 +1158,6 @@ $('.clear_history').click(function(){
 })
 let print_cooked_item = (cooking_item, item) => {
   let batch_number = get_batch_number(cooking_item.id) ? get_batch_number(cooking_item.id) : 'Unset'
-  console.log(batch_number)
   var print_window = window.open(
     "",
     "PRINT Cooked item",
