@@ -434,7 +434,7 @@ let cook_item = (id) => {
       })
     }
   })
-  if(can_cook){
+  //if(can_cook){
     data = materials;
     let item = [...data.filter((item) => item.id == id)][0];
     $("#cook-item-modal .modal-header h4").text(
@@ -450,16 +450,16 @@ let cook_item = (id) => {
     $("#cook-item-modal").attr("item-id", id);
     cook_option_render(id);
     $("#cook-item-modal").modal("show");
-  }else{
-    $.gritter.add({
-      title: `You can't start cooking ${pending_item.name}`,
-      text: `You have ready items to be finished cooking. Please finish these items and try again.`,
-      image: "assets/img/media/danger.png",
-      sticky: false,
-      time: 5000,
-      class_name: "my-sticky-class"
-    });
-  }
+  //}else{
+    // $.gritter.add({
+    //   title: `You can't start cooking ${pending_item.name}`,
+    //   text: `You have ready items to be finished cooking. Please finish these items and try again.`,
+    //   image: "assets/img/media/danger.png",
+    //   sticky: false,
+    //   time: 5000,
+    //   class_name: "my-sticky-class"
+    // });
+  //}
 
 };
 let cook_option_render = (id) => {
@@ -504,7 +504,7 @@ let cook_option_render = (id) => {
                     <a class="btn btn-primary btn-icon btn-circle btn-lg custom_batch_minus">
                       <i class="fas fa-minus text-white"></i>
                     </a>
-                    <input type="number" step="1" max="100" min="1" id="custom_batch_amount" value="4"/>
+                    <input type="number" step="0.5" max="100" min="1" id="custom_batch_amount" value="4"/>
                     <a class="btn btn-primary btn-icon btn-circle btn-lg custom_batch_plus">
                       <i class="fas fa-plus text-white"></i>
                     </a>
@@ -557,10 +557,12 @@ let cook_option_render = (id) => {
   $('.custom_batch_minus').click(function(){
     if(parseInt($("#custom_batch_amount").val()) > 1){
       $("#custom_batch_amount").val(parseInt($("#custom_batch_amount").val()) - 1)
+      $("#batch_custom").val(parseInt($("#custom_batch_amount").val()))
     }
   })
   $('.custom_batch_plus').click(function(){
     $("#custom_batch_amount").val(parseInt($("#custom_batch_amount").val()) + 1)
+    $("#batch_custom").val(parseInt($("#custom_batch_amount").val()))
   })
 };
 
@@ -575,6 +577,7 @@ let confirm_cook_item = (id) => {
   last_batch_number = get_last_batch_number(id)
   let amount = 0;
   let batch = $('input[name="batch_count"]:checked').val();
+
   let sm = false;
   if (cook_option == "batch") {
     if (batch == 0) {
@@ -1165,67 +1168,43 @@ let print_cooked_item = (cooking_item, item) => {
   );
   var date = new Date();
   print_window.document.write(`
-      <!DOCTYPE html>
-      <html lang="en" dir="ltr">
-        <head>
-          <meta charset="utf-8">
-          <title>Print Cooked item</title>
-        </head>
-        <style>
-          body{
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-          }
-          .content{
-            width: 400px;
-            height: 600px;
-            border: 1px solid #e0e0e0;
-          }
-          h1{
-            text-align: center;
-          }
-          .item-content{
-            margin: 40px;
-            height: 500px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-          }
-        </style>
-        <body>
-          <div class="content">
-            <h1>You cooked ${item.name}</h1>
-            <div class="item-content">
-              <div>
-                <h3>Name: ${item.name}</h3>
-                <h3>Amount: ${cooking_item.cooking_amount} g</h3>
-                <h3>Batch number: #${batch_number}</h3>
-                <h3>Cooking started on: ${moment(
-                  cooking_item.started_cooking_time,
-                  "MM-DD HH:mm"
-                ).format("DD MMM, YYYY HH:mm")}</h3>
-                <h3>Cooking finished on: ${moment(
-                  new Date(),
-                  "MM-DD HH:mm"
-                ).format("DD MMM, YYYY HH:mm")}</h3>
-                <h3>Time to dispose: ${moment(
-                  new Date(
-                    date.setMinutes(date.getMinutes() + item.best_serving_hours)
-                  ),
-                  "MM-DD HH:mm"
-                ).format("DD MMM, YYYY HH:mm")}</h3>
-              </div>
-              <div style="margin-bottom: 40px; text-align: center;">
-                <p>Thank you for your business.</p>
-                <p>@2020 WUSHILAND BOBA</p>
-              </div>
+    <!DOCTYPE html>
+    <html lang="en" dir="ltr">
+      <head>
+        <meta charset="utf-8">
+        <title>Print Cooked item</title>
+      </head>
+      <body>
+        <div class="item-content">
+          <div>
+            <h3>Name: ${item.name}</h3>
+            <h3><B>Batch number: #${batch_number}</B></h3>
+
+            <h3>Amount: ${cooking_item.cooking_amount} g</h3>
+
+            <h3>Cooking started on: <BR></BR>${moment(
+                cooking_item.started_cooking_time,
+                "MM-DD HH:mm"
+              ).format("DD MMM, HH:mm")}</h3>
+            <h3>Cooking finished on: <BR></BR>${moment(
+                new Date(),
+                "MM-DD HH:mm"
+              ).format("DD MMM, HH:mm")}</h3>
+            <h3>Time to dispose: <BR></BR>${moment(
+                new Date(
+                  date.setMinutes(date.getMinutes() + item.best_serving_hours)
+                ),
+                "MM-DD HH:mm"
+              ).format("DD MMM, HH:mm")}</h3>
+            <div style="margin-bottom: 40px; text-align: center;">
+              <BR></BR>
+              Kitchen QC SIGN: <BR></BR>___________________________
+              Kitchen QC SIGN: <BR></BR>___________________________
             </div>
           </div>
-        </body>
-      </html>
+        </div>
+      </body>
+    </html>
   `);
   print_window.print();
   print_window.close();
