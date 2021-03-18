@@ -1225,7 +1225,7 @@ let print_cooked_item = (cooking_item, item) => {
   var print_window = window.open(
     "",
     "PRINT Cooked item",
-    `height=${window.innerHeight},width=${window.innerWidth}`
+    "height=100%,width=100%"
   );
   var date = new Date();
   print_window.document.write(`
@@ -1243,8 +1243,7 @@ let print_cooked_item = (cooking_item, item) => {
 
             <h3>Amount:
               ${(() => {
-                console.log(get_bag_count(cooking_item.id))
-                if((get_bag_count(cooking_item.id)) && (get_bag_count(cooking_item.id) != 1)){
+                if(get_bag_count(cooking_item.id) != 1){
                   return `${get_bag_count(cooking_item.id)} x ${cooking_item.cooking_amount} (${get_bag_count(cooking_item.id) * cooking_item.cooking_amount} g)`
                 }else{
                   return `${cooking_item.cooking_amount} (g)`

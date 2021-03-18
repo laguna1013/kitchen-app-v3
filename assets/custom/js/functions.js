@@ -291,7 +291,15 @@ let get_batch_number = (batch_item_id) => {
     return ''
   }
 }
-
+let get_bag_count = (batch_item_id) => {
+  let batch_info = localStorage.getItem('BATCH_INFORMATION') ? [...JSON.parse(localStorage.getItem('BATCH_INFORMATION'))] : []
+  let ret = batch_info.filter(item => item.batch_item_id == batch_item_id)[0]
+  if(ret){
+    return ret.bag ? parseFloat(ret.bag) : 1
+  }else{
+    return 1
+  }
+}
 let clear_batch_info = () => {
   localStorage.removeItem('BATCH_INFORMATION')
 }
@@ -394,6 +402,6 @@ let clear_disposal_history = () => {
 
 
 let start_new_day = () => {
-  
+  clear_notifications()
   clear_batch_info()
 }
