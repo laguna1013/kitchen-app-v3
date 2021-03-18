@@ -945,7 +945,7 @@ let confirm_dispose_item = (item_id, cooked_item_id) => {
     )[0];
     let disposal_reason = $('input[name="disposal_reason"]:checked').val();
 
-    if (cooked_item["remaining_amount"] < disposal_amount) {
+    if (cooked_item["remaining_amount"]*1 < disposal_amount*1) {
       disposal_amount = cooked_item["remaining_amount"];
     }
 
@@ -1230,47 +1230,43 @@ let print_cooked_item = (cooking_item, item) => {
   var date = new Date();
   print_window.document.write(`
     <!DOCTYPE html>
-    <html lang="en" dir="ltr">
-      <head>
-        <meta charset="utf-8">
-        <title>Print Cooked item</title>
+         <head>
+        
       </head>
       <body>
         <div class="item-content">
-          <div>
-            <h3>Name: ${item.name}</h3>
-            <h3><B>Batch number: #${batch_number}</B></h3>
+            <B>Name: ${item.name}<B><BR>
+            <B>Batch number: #${batch_number}</B><BR>
 
-            <h3>Amount:
+            <B>Amount:
               ${(() => {
-                console.log(get_bag_count(cooking_item.id))
-                if((get_bag_count(cooking_item.id)) && (get_bag_count(cooking_item.id) != 1)){
+                if(get_bag_count(cooking_item.id) != 1){
                   return `${get_bag_count(cooking_item.id)} x ${cooking_item.cooking_amount} (${get_bag_count(cooking_item.id) * cooking_item.cooking_amount} g)`
                 }else{
                   return `${cooking_item.cooking_amount} (g)`
                 }
               })()}
-            </h3>
+            </B><BR>
 
-            <h3>Cooking started on: <BR></BR>${moment(
+            <B>Cooking started: <BR><U>${moment(
                 cooking_item.started_cooking_time,
                 "MM-DD HH:mm"
-              ).format("DD MMM, HH:mm")}</h3>
-            <h3>Cooking finished on: <BR></BR>${moment(
+              ).format("DD MMM, HH:mm")}</B></U><BR>
+            <B>Cooking finished: <BR><U>${moment(
                 new Date(),
                 "MM-DD HH:mm"
-              ).format("DD MMM, HH:mm")}</h3>
-            <h3>Time to dispose: <BR></BR>${moment(
+              ).format("DD MMM, HH:mm")}</B></U><BR>
+            <B>Time to dispose: <BR><BIG><U>${moment(
                 new Date(
                   date.setMinutes(date.getMinutes() + item.best_serving_hours)
                 ),
                 "MM-DD HH:mm"
-              ).format("DD MMM, HH:mm")}</h3>
+              ).format("DD MMM, HH:mm")}</B></U></BIG><BR>
             <div style="margin-bottom: 40px; text-align: center;">
-              <BR></BR>
+             
               Kitchen QC SIGN: <BR></BR>___________________________
               Kitchen QC SIGN: <BR></BR>___________________________
-            </div>
+            
           </div>
         </div>
       </body>

@@ -10,7 +10,8 @@ let get_materials = () => {
     async: false,
     beforeSend: function () {},
     success: function (data) {
-      if (data) {
+		//console.log(data);
+      if (data!=1) {
         $returnJson = JSON.parse(data);
         if ($returnJson["data"]) {
           $.each($returnJson["data"], function () {
@@ -46,6 +47,10 @@ let get_materials = () => {
           });
         }
       }
+	  else
+	  {
+		console.log("1");
+	 }
     },
     error: function (data) {},
     complete: function (data) {
