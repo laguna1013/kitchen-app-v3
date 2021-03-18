@@ -73,8 +73,13 @@ let init = () => {
   // time
   setInterval(function () {
     let time = moment().format('HH:mm:ss')
+    let just_time = moment().format('mm:ss')
     if((time == '23:59:59') || (time == '00:00:00')){
       start_new_day()
+    }
+    if(just_time == '00:00'){
+      // Refresh notifications every hour
+      clear_notifications()
     }
     $(".timestamp").text(moment().format("HH:mm:ss DD, MMM YYYY"));
   }, 1000);
@@ -256,7 +261,7 @@ let render_item_detail = (id) => {
                 }
               })
               if (cooking_items_count != 0) {
-                return `<h4 class="widget-chart-info-title">Current cooking (${cooking_items_count})</h4><p class="widget-chart-info-desc m-b-10">You are cooking ${item.cooking_items.length} batch at the moment. Please check quality before the food is ready.</p>`;
+                return `<h4 class="widget-chart-info-title">Current cooking (${cooking_items_count})</h4><p class="widget-chart-info-desc m-b-10">You are cooking ${cooking_items_count} batch at the moment. Please check quality before the food is ready.</p>`;
               } else {
                 return `<h4 class="widget-chart-info-title">There are no cooking items.</h4>`;
               }
@@ -303,9 +308,16 @@ let render_item_detail = (id) => {
                       ${ (() => {
                         if(currentCookingMin >= item.cooking_time){
                           //
-                          return `<button class="btn btn-sm btn-primary d-flex align-items-center m-l-5 width-90 p-l-5 p-r-5" type="button" name="button" onclick="ready_item('${ item.id }', '${ _item.id }',true)">
-                                    <i class="fa fa-check m-r-5"></i>Ready
-                                  </button>`;
+                          if(currentCookingMin < item.best_serving_hours){
+                            return `<button class="btn btn-sm btn-primary d-flex align-items-center m-l-5 width-90 p-l-5 p-r-5" type="button" name="button" onclick="ready_item('${ item.id }', '${ _item.id }',true)">
+                                      <i class="fa fa-check m-r-5"></i>Ready
+                                    </button>`;
+                          }else{
+                            return `<button class="btn btn-sm btn-default d-flex align-items-center m-l-5 width-90 p-l-5 p-r-5 text-red" type="button" name="button" >
+                                      <i class="fa fa-trash m-r-5"></i>Went bad
+                                    </button>`;
+                          }
+
                         }else{
                           return `<button class="btn btn-sm btn-default d-flex align-items-center m-l-5 width-90 p-l-5 p-r-5" type="button" name="button" >
                                     <i class="fa fa-hourglass m-r-5"></i>Cooking
@@ -404,7 +416,7 @@ let render_item_detail = (id) => {
                 let amount = 0
                 let disposals = get_disposal_history()
                 disposals.forEach(disposal => {
-                  if(disposal.item_id == item.id){
+                  if((disposal.item_id == item.id) && (moment().format('YYYY-MM-DD') == moment(disposal.time).format('YYYY-MM-DD'))) {
                     qty++
                     amount += parseInt(disposal.amount)
                   }
@@ -769,26 +781,26 @@ let ready_item = (item_id, cooking_item_id, isReady) => {
 
   let txt = "Please checkout the quality of the food. You can not revert this action. Do you guarantee the quality of food?";
   if (!isReady) {
-    txt = "You are going to dispose the batch of food. You can not revert this action. Do you guarantee the the food is really bad?";
+    txt = "Are you going to dispose this cooking food batch?";
   }
   swal({
     title: "Are you sure?",
     text: txt,
-    icon: "info",
+    icon: isReady? "info" : "error",
     closeOnClickOutside: false,
     buttons: {
       cancel: {
-        text: "No, I do not guarantee.",
+        text: isReady ? "No, I do not guarantee." : "No",
         value: false,
         visible: true,
         className: "btn btn-default",
         closeModal: true,
       },
       confirm: {
-        text: "Yes, I guarantee!",
+        text: isReady ? "Yes, I guarantee!" : "Dispose",
         value: true,
         visible: true,
-        className: "btn btn-primary",
+        className: isReady ? "btn btn-primary" : "btn btn-danger",
         closeModal: true,
       },
     },
@@ -885,10 +897,6 @@ let dispose_item = (item_id, cooked_item_id) => {
                   <div class="m-t-5 dispose_remaining">Remaining after disposal: ${cooked_item.remaining_amount} g</div>
                   <div class="w-100">
                     <span class="f-s-15 f-w-700">Disposal reason </span>
-                    <div class="custom-control custom-radio m-t-5 m-b-5">
-                      <input class="custom-control-input" type="radio" name="disposal_reason" id="reason_0" value="Comsume for customers" checked>
-                      <label class="custom-control-label" for="reason_0">Comsume for customers</label>
-                    </div>
                     <div class="custom-control custom-radio m-b-5">
                       <input class="custom-control-input" type="radio" name="disposal_reason" id="reason_1" value="Best serving time out">
                       <label class="custom-control-label" for="reason_1">Best serving time out</label>
@@ -1013,15 +1021,17 @@ let dispose_history = (id) => {
     let tds = ``
     let total_amount = 0
     disposals.forEach((item, idx) => {
-      total_amount += parseInt(item.amount)
-      tds += `
-        <tr>
-          <td>${idx+1}</td>
-          <td>${moment(item.timestamp).format('MM-DD HH:mm:ss')}</td>
-          <td>${item.amount}g</td>
-          <td>${item.reason}</td>
-        </tr>
-      `
+      if(moment().format('YYYY-MM-DD') == moment(item.time).format('YYYY-MM-DD')){
+        total_amount += parseInt(item.amount)
+        tds += `
+          <tr>
+            <td>${idx+1}</td>
+            <td>${moment(item.timestamp).format('MM-DD HH:mm:ss')}</td>
+            <td>${item.amount}g</td>
+            <td>${item.reason}</td>
+          </tr>
+        `
+      }
     })
     tag = `
       <div>
@@ -1054,6 +1064,7 @@ let dispose_history = (id) => {
 let soldout_item = (id) => {
   let data = materials;
   let item = data.filter((item) => item.id == defaultMaterialID)[0];
+  console.log(item)
   if (!item["sellOut"] || item["sellOut"] == 1) {
     // 表示当前物料on sale，需要切换成sell out
     $("#sellOutTitle").html("Confirm to sell out");
@@ -1231,7 +1242,7 @@ let print_cooked_item = (cooking_item, item) => {
   print_window.document.write(`
     <!DOCTYPE html>
          <head>
-        
+
       </head>
       <body>
         <div class="item-content">
@@ -1263,10 +1274,10 @@ let print_cooked_item = (cooking_item, item) => {
                 "MM-DD HH:mm"
               ).format("DD MMM, HH:mm")}</B></U></BIG><BR>
             <div style="margin-bottom: 40px; text-align: center;">
-             
+
               Kitchen QC SIGN: <BR></BR>___________________________
               Kitchen QC SIGN: <BR></BR>___________________________
-            
+
           </div>
         </div>
       </body>

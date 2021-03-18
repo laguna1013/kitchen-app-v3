@@ -167,3 +167,6 @@ body #gritter-notice-wrapper .gritter-item-wrapper {
   width: 350px;
   margin: 10px 75px;
 }
+.notifications{
+  min-width: 360px;
+}

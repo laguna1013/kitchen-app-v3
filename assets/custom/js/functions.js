@@ -220,7 +220,7 @@ let render_notification = () => {
     $(".kitchen-notifications .notifications").append(
       `<div class="dropdown-header">NOTIFICATIONS (0)</div>
       <div class="dropdown-footer text-center">
-        <a href="javascript:;">Clear all</a>
+        <p>There are no notifications right now</p>
       </div>`
     );
   } else {
@@ -229,8 +229,9 @@ let render_notification = () => {
       $(`<i class="fa fa-bell"></i><span class="label">${notifications.length}</span>`)
     );
     $(".kitchen-notifications .notifications").append(
-      `<div class="dropdown-header" style="position: sticky; top: 0;">
-        <span>NOTIFICATIONS (${notifications.length})</span>
+      `<div class="dropdown-header" style="position: sticky; top: 0; display: flex; justify-content: space-between;">
+        <div>NOTIFICATIONS (${notifications.length})</div>
+        <a href="javascript:;" onclick="clear_notifications()" style="font-size: 12px;">&times; Clear all</a>
       </div>`
     );
     notifications.forEach((item) => {
@@ -249,11 +250,6 @@ let render_notification = () => {
         </a>
       `);
     });
-    $(".kitchen-notifications .notifications").append(`
-      <div class="dropdown-footer text-center">
-        <a href="javascript:;" onclick="clear_notifications()">Clear all</a>
-      </div>
-    `);
   }
 };
 
