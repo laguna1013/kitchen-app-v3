@@ -63,35 +63,35 @@
         <ul class="nav">
           <li class="nav-profile">
             <a href="javascript:;" data-toggle="nav-profile">
-              <div class="cover with-shadow w-100"></div>
+              <div class="cover with-shadow"></div>
               <div class="image w-100 height-60" style="border-radius: unset;">
-                <img src="assets/img/media/wushilogo.png" alt="Wushi land logo" class="w-100">
+                <img src="" alt="Company logo" class="w-100 company-logo">
               </div>
               <div class="info">
-                <b class="caret pull-right"></b>Admin
-                <small>Kitchen manager</small>
+                <b class="caret pull-right"></b>
+                <p class="m-0 user-name">Admin</p>
+                <small class="user-company">Kitchen manager</small>
               </div>
             </a>
           </li>
           <li>
             <ul class="nav nav-profile closed" style="display: none;">
-              <li><a href="javascript:;"><i class="fa fa-cog"></i> Settings</a></li>
-              <li><a href="javascript:;"><i class="fa fa-question-circle"></i> Tutorial</a></li>
-              <li><a href="javascript:;"><i class="fa fa-sign-out-alt"></i> Log out</a></li>
+              <li><a href="javascript:;" onclick="logout()"><i class="fa fa-sign-out-alt"></i> Log out</a></li>
             </ul>
           </li>
         </ul>
-        <ul class="nav">
-          <li class="nav-header">Cooking items</li>
+        <ul class="nav" style="height: 50px;">
+          <li class="nav-sub remaining-amount">
+            <a href="javascript:;" class="d-flex align-items-center justify-content-start">
+              <i class="fa fa-chart-pie widget-img widget-img-sm rounded d-flex align-items-center"></i>
+              <p class="w-50 m-0 m-l-10">Overview</p>
+            </a>
+          </li>
         </ul>
-        <ul class="nav item-list m-t-10">
+        <ul class="nav item-list"></ul>
 
-        </ul>
-        <ul class="nav">
-          <li class="nav-header">Other pages</li>
-        </ul>
         <ul class="nav m-t-10">
-          <li class="raw-material">
+          <li class="nav-sub raw-material">
             <a href="javascript:;" class="d-flex align-items-center justify-content-start">
               <img src="assets/img/items/raw.jpg" class="widget-img widget-img-sm rounded" />
               <p class="w-50 m-0 m-l-10">Raw materials</p>
@@ -106,7 +106,7 @@
         <div class="col-md-12">
           <div class="widget widget-rounded m-b-0" data-id="widget">
             <div class="widget-header d-flex justify-content-between align-items-center">
-              <h4 class="widget-header-title width-200">Item Overview</h4>
+              <h4 class="widget-header-title width-200 page-title">Item Overview</h4>
               <div class="timestamp m-l-auto p-r-10 text-red f-w-600"></div>
             </div>
             <div class="vertical-box with-grid with-border-top item-details">
@@ -269,7 +269,7 @@
     <div class="modal-dialog modal-lg">
       <div class="modal-content">
         <div class="modal-header">
-          <h4 class="modal-title">Disposal History</h4>
+          <h4 class="modal-title">History</h4>
           <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
         </div>
         <div class="modal-body">
@@ -278,8 +278,7 @@
           </div>
         </div>
         <div class="modal-footer">
-          <a href="javascript:;" class="btn btn-white" data-dismiss="modal">Cancel</a>
-          <a href="javascript:;" class="btn btn-danger clear_history" data-dismiss="modal">Clear history</a>
+          <a href="javascript:;" class="btn btn-white" data-dismiss="modal">OK</a>
         </div>
       </div>
     </div>
@@ -291,6 +290,12 @@
   <script type="text/javascript" src="assets/plugins/swal/swal.min.js"></script>
   <script type="text/javascript" src="assets/plugins/webcam/webcam.min.js"></script>
   <script type="text/javascript" src="assets/js/default.min.js"></script>
+
+  <script src="assets/plugins/datatables.net/js/jquery.dataTables.min.js"></script>
+	<script src="assets/plugins/datatables.net-bs4/js/dataTables.bootstrap4.min.js"></script>
+	<script src="assets/plugins/datatables.net-responsive/js/dataTables.responsive.min.js"></script>
+	<script src="assets/plugins/datatables.net-responsive-bs4/js/responsive.bootstrap4.min.js"></script>
+  <script src="assets/plugins/apexcharts/dist/apexcharts.min.js"></script>
 
   <script type="text/javascript" src="assets/custom/data/data.js"></script>
   <script type="text/javascript" src="assets/custom/js/api.js"></script>

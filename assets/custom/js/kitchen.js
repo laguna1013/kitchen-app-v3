@@ -2,6 +2,7 @@ let cook_option = "batch"; // Batch cook or amount cook
 let selected_item_id = -1;
 let defaultMaterialID = localStorage.getItem('selectedMaterialId') ? localStorage.getItem('selectedMaterialId') : -1; // 默认选中的物料的id
 let currentCode = -1; // 默认选中的物料的code;
+let is_overview_page = false;
 // App
 let init = () => {
   // Welcome message
@@ -57,15 +58,6 @@ let init = () => {
           `
         }
       });
-      kitchen_notification(
-        'Good Morning, Please cook these items.',
-        items_tag,
-        'assets/img/media/warning.png',
-        true,
-        3000,
-        true,
-        'assets/alarm.mp3'
-      );
       render_notification();
     }
   }, 5000);
@@ -153,7 +145,7 @@ let render_item_list = () => {
       let div = `
 				<li class="item" data-item-id="${item.id}">
 					<a href="javascript:;" class="d-flex align-items-center justify-content-start" onclick="select_item('${item.id}')">
-						<img src="image/${item.id}.jpg" class="widget-img widget-img-sm rounded"/>
+						<img src="image/${item.id}.jpg" onerror="this.src='assets/img/items/alt.png'" class="widget-img widget-img-sm rounded"/>
 						<p class="w-50 m-0 m-l-10">${item.name}</p>
 						<p class="label bg-red">${$idx}</p>
 					</a>
@@ -164,7 +156,7 @@ let render_item_list = () => {
       let div = `
 				<li class="item" data-item-id="${item.id}">
 					<a href="javascript:;" class="d-flex align-items-center justify-content-start" onclick="select_item('${item.id}')">
-						<img src="image/${item.id}.jpg" class="widget-img widget-img-sm rounded"/>
+						<img src="image/${item.id}.jpg" onerror="this.src='assets/img/items/alt.png'" class="widget-img widget-img-sm rounded"/>
 						<p class="w-50 m-0 m-l-10">${item.name}</p>
 					</a>
 				</li>
@@ -174,14 +166,18 @@ let render_item_list = () => {
   });
 
   if (defaultMaterialID == -1) {
-    select_item(data[0].id);
+    //select_item(data[0].id);
     if (data.length != 0) {
       defaultMaterialID = data[0].id;
       localStorage.setItem('selectedMaterialId', defaultMaterialID);
     }
   } else {
-    select_item(defaultMaterialID)
-    render_item_detail(defaultMaterialID);
+    if(!is_overview_page){
+      select_item(defaultMaterialID)
+      render_item_detail(defaultMaterialID);
+    }else{
+      render_overview()
+    }
   }
 };
 
@@ -192,12 +188,19 @@ let select_item = (id) => {
   defaultMaterialID = id;
   localStorage.setItem('selectedMaterialId', defaultMaterialID);
   $(".item").removeClass("active");
-  $(".raw-material").removeClass("active");
+  $(".remaining-amount").removeClass("active");
   $(`li[data-item-id=${id}]`).addClass("active");
   $(".item-details").parent().find(".widget-header-title").text("Item details");
+  is_overview_page = false
   render_item_detail(id);
 };
-
+$(".remaining-amount").click(function(){
+  $(".nav-sub").removeClass("active");
+  $(".item").removeClass("active");
+  $(this).addClass('active')
+  is_overview_page = true
+  render_overview()
+})
 // 选择 左边列表后的右边样式
 let render_item_detail = (id) => {
   if (id == -1) {
@@ -216,7 +219,7 @@ let render_item_detail = (id) => {
     <div class="vertical-box-column p-t-15 p-b-15" style="width: 30%;">
       <div class="w-100 h-100 d-flex flex-column align-items-center justify-content-around">
         <span class="p-l-20 p-r-20 f-s-15 f-w-700 w-100 m-b-10">${ item.name }</span>
-        <img class="rounded item-image" src="image/${item.id}.jpg" alt="">
+        <img class="rounded item-image" src="image/${item.id}.jpg" onerror="this.src='assets/img/items/alt.png'" alt="">
         <div class="widget-chart-info w-100 p-l-20 p-r-20">
           <hr>
           <div class="item-description height-150">
@@ -340,8 +343,8 @@ let render_item_detail = (id) => {
       </div>
       <hr>
       <div class="widget-chart-info" style="height: 250px; overflow: auto;">
-        <h4 class="widget-chart-info-title">Cooked batches (${$cookedCounts})</h4>
-        <p class="widget-chart-info-desc">You have ${$cookedCounts} cooked batches at the moment.</p>
+        <h4 class="widget-chart-info-title">Cooked batches (${item.cooked_items.length})</h4>
+        <p class="widget-chart-info-desc">You have ${item.cooked_items.length} cooked batches at the moment.</p>
         <div class="cooked-batches">
           ${(() => {
             if (item.cooked_items.length != 0) {
@@ -435,6 +438,218 @@ let render_item_detail = (id) => {
   $(".item-details").empty();
   $(".item-details").append($(template));
 };
+
+let render_overview = () => {
+  $(".item-details").empty()
+  $('.page-title').html('Overview')
+  let tbody = ``
+  let selected_item_code = ''
+  materials.forEach((item, idx) => {
+    if(item.cooked_items.length != 0){
+      if(selected_item_code == ''){
+        selected_item_code = item.code
+      }
+      tbody += `
+        <tr class="overview-item code-${item.code}" style="cursor: pointer;">
+  				<td width="1%" class="f-s-600 text-inverse">${item.code}</td>
+  				<td width="1%" class="with-img"><img src="image/${item.id}.jpg" onerror="this.src='assets/img/items/alt.png'" class="img-rounded height-30 width-30"/></td>
+  				<td>${item.name}</td>
+  				<td>${item.cooked_items.length}</td>
+  				<td>${item.cooked_items.reduce((amount, _item) => {
+            return amount += parseFloat(_item.remaining_amount)
+          }, 0)}</td>
+  				<td>
+          ${
+            (() => {
+              return [...get_disposal_history()].reduce((amount, _item) => {
+                if(_item.item_id == item.id){
+                  return amount += parseFloat(_item.amount)
+                }
+                return amount
+              }, 0)
+            })()
+          }
+          </td>
+  			</tr>
+      `
+    }
+  })
+  let template = `
+    <div class="row m-t-10">
+      <div class="col-xl-7">
+        <div class="panel">
+          <div class="panel-heading">
+            <h4 class="panel-title">Cooked items</h4>
+          </div>
+          <div class="panel-body">
+            <table id="data-table-default" class="table table-hover table-bordered table-td-valign-middle">
+              <thead>
+                <tr>
+                  <th width="1%">Code </th>
+                  <th width="1%" data-orderable="false">Image </th>
+                  <th class="text-nowrap">Item name </th>
+                  <th width="1%" class="text-nowrap">Cooked batches </th>
+                  <th width="1%" class="text-nowrap">Total remaining amount(g) </th>
+                  <th width="1%" class="text-nowrap">Dispose(g) </th>
+                </tr>
+              </thead>
+              <tbody>${tbody}</tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-5">
+        <div class="panel">
+          <div class="panel-heading">
+            <h4 class="panel-title overview-item-name">Item detail</h4>
+          </div>
+          <div class="panel-body overview-item-detail">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+  $(".item-details").append($(template))
+  render_overview_details(selected_item_code)
+  $('#data-table-default').DataTable({
+		responsive: true
+	});
+  $('.overview-item').click(function(){
+    let selected_item_code = $(this).attr('class').split(' ')[1].split('-')[1]
+    render_overview_details(selected_item_code)
+  })
+}
+
+let render_overview_details = (code) => {
+  let item = materials.filter(item => item.code == code)[0]
+  item.dispose_history = get_disposal_history().filter(_item => _item.item_id == item.id)
+  item.total_history = get_kitchen_history().filter(_item => _item.item_id == item.id)
+
+  let template = `
+    <div class="row align-items-center p-b-1">
+      <div class="col-4">
+        <div class="height-100 d-flex align-items-center justify-content-center">
+          <img src="image/${item.id}.jpg" onerror="this.src='assets/img/items/alt.png'" class="width-100 height-100 rounded">
+        </div>
+      </div>
+      <div class="col-8">
+        <div class="m-b-2 text-truncate">${item.name}</div>
+        <div class="m-b-2  text-grey f-s-11">${item.code}</div>
+        <div class="text-grey f-s-11 m-b-15 text-truncate">
+          ${item.receipe}
+        </div>
+        <a href="#" class="btn btn-xs btn-indigo f-s-10 pl-2 pr-2" onclick="dispose_history(${item.id})">View history</a>
+      </div>
+    </div>
+    <p class="m-t-10 m-b-10">Overview</p>
+    <div id="overview-chart"></div>
+  `
+  $('.overview-item-detail').empty()
+  $('.overview-item-detail').append($(template))
+
+  var options = {
+		chart: {
+			height: 350,
+			type: 'bar'
+		},
+		title: {
+			text: 'Cook/Dispose history overview for ' + item.name,
+			align: 'center'
+		},
+		plotOptions: {
+			bar: {
+				horizontal: false,
+				columnWidth: '55%',
+        distributed: true
+			},
+		},
+		dataLabels: {
+			enabled: false
+		},
+		stroke: {
+			show: true,
+			width: 2,
+			colors: ['transparent']
+		},
+		colors: [COLOR_SILVER, COLOR_INDIGO, COLOR_YELLOW, COLOR_RED, COLOR_GREEN],
+    series: [{
+      name: 'Amount',
+      data: [
+        item.cooking_items.reduce((amount, _item) => {
+          return amount += parseInt(_item.cooking_amount)
+        }, 0),
+        item.total_history.reduce((amount, _item) => {
+          if(_item.type == 'cooking_finished'){
+            return amount += parseInt(_item.amount)
+          }
+          return amount
+        }, 0),
+        Math.abs(item.total_history.reduce((amount, _item) => {
+          if(_item.type == 'cooking_finished'){
+            return amount += parseInt(_item.amount)
+          }
+          return amount
+        }, 0) - item.total_history.reduce((amount, _item) => {
+          if(_item.type == 'dispose'){
+            return amount += parseInt(_item.amount)
+          }
+          return amount
+        }, 0) - item.cooked_items.reduce((amount, _item) => {
+          return amount += parseInt(_item.remaining_amount)
+        }, 0)),
+        item.total_history.reduce((amount, _item) => {
+          if(_item.type == 'dispose'){
+            return amount += parseInt(_item.amount)
+          }
+          return amount
+        }, 0),
+        item.cooked_items.reduce((amount, _item) => {
+          return amount += parseInt(_item.remaining_amount)
+        }, 0)
+      ]
+    }],
+		xaxis: {
+			categories: ['Cooking amount', 'Total cooked amount', 'POS usage', 'Disposed amount', 'Remaining amount'],
+			axisBorder: {
+				show: true,
+				color: COLOR_SILVER_TRANSPARENT_5,
+				height: 1,
+				width: '100%',
+				offsetX: 0,
+				offsetY: -1
+			},
+      labels: {
+        style: {
+          colors: [COLOR_SILVER, COLOR_INDIGO, COLOR_YELLOW, COLOR_RED, COLOR_GREEN],
+          fontSize: '12px'
+        }
+      }
+		},
+		yaxis: {
+			title: {
+				text: 'Gram'
+			}
+		},
+		fill: {
+			opacity: 1
+		},
+		tooltip: {
+			y: {
+				formatter: function (val) {
+					return val + " g"
+				}
+			}
+		}
+	};
+
+	var chart = new ApexCharts(
+		document.querySelector('#overview-chart'),
+		options
+	);
+
+	chart.render();
+}
 
 // 点击cook按钮
 let cook_item = (id) => {
@@ -831,7 +1046,7 @@ let ready_item = (item_id, cooking_item_id, isReady) => {
           false,
           5000
         );
-
+        console.log(get_bag_count(item.id))
         let req = {
           shop_id: JSON.parse(localStorage.getItem('kitchenLogin'))['shop_id'],
           item_id: item.id,
@@ -1014,9 +1229,9 @@ let confirm_dispose_item = (item_id, cooked_item_id) => {
 };
 
 let dispose_history = (id) => {
-  let disposals = get_disposal_history().filter(item => item.item_id == id)
+  let disposals = get_kitchen_history().filter(item => item.item_id == id)
   $("#disposal-history-modal").modal("show");
-  let tag = `There are no disposals today.`
+  let tag = `There are no history today.`
   if(disposals.length > 0){
     let tds = ``
     let total_amount = 0
@@ -1027,7 +1242,10 @@ let dispose_history = (id) => {
           <tr>
             <td>${idx+1}</td>
             <td>${moment(item.timestamp).format('MM-DD HH:mm:ss')}</td>
-            <td>${item.amount}g</td>
+            <td>${item.amount * parseFloat(item.batch) * parseFloat(item.bag)}g</td>
+            <td>${item.batch}</td>
+            <td>${item.bag}</td>
+            <td>${item.type}</td>
             <td>${item.reason}</td>
           </tr>
         `
@@ -1041,19 +1259,16 @@ let dispose_history = (id) => {
               <th>#</th>
               <th>Timestamp</th>
               <th>Amount</th>
-              <th>Reason</th>
+              <th>Batches</th>
+              <th>Bages</th>
+              <th>Action type</th>
+              <th>Note</th>
             </tr>
           </thead>
           <tbody>
             ${
               tds
             }
-            <tr>
-              <td>-</td>
-              <td>Total disposal amount</td>
-              <td class="text-red">${total_amount}g</td>
-              <td>-</td>
-            </tr>
           </tbody>
         </table>
       </div>
@@ -1152,8 +1367,6 @@ function addOrChangeCookItem($cookJson) {
 
 $(document).ready(function () {
   init();
-  // Render item list
-  //render_item_list()
 });
 
 let key_tap = (key) => {
@@ -1227,7 +1440,9 @@ $(".confirm_dispose_item").click(function () {
     $("#dispose-item-modal").attr("cooked-item-id")
   );
 });
-
+$(".user-name").html(JSON.parse(localStorage.getItem('currentKitchenUser')).res[0].name)
+$(".user-company").html(JSON.parse(localStorage.getItem('currentKitchenUser')).res[0].company)
+$('.company-logo').attr('src', `./assets/img/logos/${(JSON.parse(localStorage.getItem('currentKitchenUser')).res[0].company).toLowerCase()}.png`)
 $('.clear_history').click(function(){
   clear_disposal_history()
 })

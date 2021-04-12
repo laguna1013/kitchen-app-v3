@@ -304,7 +304,9 @@ let get_bag_count = (batch_item_id) => {
 let clear_batch_info = () => {
   localStorage.removeItem('BATCH_INFORMATION')
 }
-
+let clear_kitchen_history_info = () => {
+  localStorage.removeItem('KITCHEN_HISTORY')
+}
 async function upload_history (data) {
   let res;
   try{
@@ -348,10 +350,12 @@ async function get_purchasing_item (data) {
   }
 }
 let kitchen_history = (req) => {
-  console.log(req)
-  upload_history(req).then((res, err) => {
-    console.log(res)
-  })
+  let history = localStorage.getItem('KITCHEN_HISTORY') ? [...JSON.parse(localStorage.getItem('KITCHEN_HISTORY'))] : []
+  history.push(req)
+  localStorage.setItem('KITCHEN_HISTORY', JSON.stringify(history))
+  // upload_history(req).then((res, err) => {
+  //   console.log(res)
+  // })
 }
 let get_qty_change = (packing_info, amount) => {
   let res = {
@@ -397,12 +401,16 @@ let get_disposal_history = (id) => {
   let disposals = localStorage.getItem('DISPOSAL_HISTORY') ? JSON.parse(localStorage.getItem('DISPOSAL_HISTORY')) : []
   return disposals
 }
+let get_kitchen_history = (id) => {
+  let history = localStorage.getItem('KITCHEN_HISTORY') ? JSON.parse(localStorage.getItem('KITCHEN_HISTORY')) : []
+  return history
+}
 let clear_disposal_history = () => {
   localStorage.removeItem('DISPOSAL_HISTORY')
 }
 
-
 let start_new_day = () => {
   clear_notifications()
   clear_batch_info()
+  clear_kitchen_history_info()
 }
