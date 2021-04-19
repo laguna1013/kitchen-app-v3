@@ -445,7 +445,7 @@ let render_overview = () => {
   let tbody = ``
   let selected_item_code = ''
   materials.forEach((item, idx) => {
-    if(item.cooked_items.length != 0){
+    if((item.cooked_items.length != 0) || (item.cooking_items.length != 0)){
       if(selected_item_code == ''){
         selected_item_code = item.code
       }
@@ -474,6 +474,7 @@ let render_overview = () => {
       `
     }
   })
+
   let template = `
     <div class="row m-t-10">
       <div class="col-xl-7">
