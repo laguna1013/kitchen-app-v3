@@ -3,6 +3,10 @@ let selected_item_id = -1;
 let defaultMaterialID = localStorage.getItem('selectedMaterialId') ? localStorage.getItem('selectedMaterialId') : -1; // 默认选中的物料的id
 let currentCode = -1; // 默认选中的物料的code;
 let is_overview_page = false;
+let is_remaining_page = false;
+// Remaining items multiselection clear
+
+localStorage.setItem('SELECTED_REMAINING_ITEMS', JSON.stringify([]))
 // App
 let init = () => {
   // Welcome message
@@ -41,7 +45,7 @@ let init = () => {
         }
       })
     }
-  }, 5 * 1000);
+  }, 10 * 1000);
   // 安全库存和每天开店要煮的
   setTimeout(function () {
     $idx = materials.filter((o) => o.cooked_items.length != 0).length;
@@ -172,11 +176,13 @@ let render_item_list = () => {
       localStorage.setItem('selectedMaterialId', defaultMaterialID);
     }
   } else {
-    if(!is_overview_page){
+    if(is_overview_page){
+      render_overview()
+    }else if(is_remaining_page){
+      render_remaining()
+    }else{
       select_item(defaultMaterialID)
       render_item_detail(defaultMaterialID);
-    }else{
-      render_overview()
     }
   }
 };
@@ -188,18 +194,29 @@ let select_item = (id) => {
   defaultMaterialID = id;
   localStorage.setItem('selectedMaterialId', defaultMaterialID);
   $(".item").removeClass("active");
-  $(".remaining-amount").removeClass("active");
+  $(".overview").removeClass("active");
+  $(".remaining").removeClass("active");
   $(`li[data-item-id=${id}]`).addClass("active");
   $(".item-details").parent().find(".widget-header-title").text("Item details");
   is_overview_page = false
+  is_remaining_page = false
   render_item_detail(id);
 };
-$(".remaining-amount").click(function(){
+$(".overview").click(function(){
   $(".nav-sub").removeClass("active");
   $(".item").removeClass("active");
   $(this).addClass('active')
   is_overview_page = true
+  is_remaining_page = false
   render_overview()
+})
+$(".remaining").click(function(){
+  $(".nav-sub").removeClass("active");
+  $(".item").removeClass("active");
+  $(this).addClass('active')
+  is_remaining_page = true
+  is_overview_page = false
+  render_remaining()
 })
 // 选择 左边列表后的右边样式
 let render_item_detail = (id) => {
@@ -443,17 +460,26 @@ let render_overview = () => {
   $(".item-details").empty()
   $('.page-title').html('Overview')
   let tbody = ``
-  let selected_item_code = ''
+  let selected_item_code = localStorage.getItem('SELECTED_OVERVIEW_ITEM_CODE') ? localStorage.getItem('SELECTED_OVERVIEW_ITEM_CODE') : ''
+  let item_codes = []
   materials.forEach((item, idx) => {
+    item_codes.push(item.code)
+  })
+  if(selected_item_code == '' || !item_codes.includes(selected_item_code)){
+    selected_item_code = item_codes[0]
+  }
+  materials.forEach((item, idx) => {
+    let selected_style = ''
     if((item.cooked_items.length != 0) || (item.cooking_items.length != 0)){
-      if(selected_item_code == ''){
-        selected_item_code = item.code
+      if(item.code == selected_item_code){
+        selected_style = 'background: #eee;'
       }
       tbody += `
-        <tr class="overview-item code-${item.code}" style="cursor: pointer;">
+        <tr class="overview-item code-${item.code}" style="cursor: pointer; ${selected_style}">
   				<td width="1%" class="f-s-600 text-inverse">${item.code}</td>
   				<td width="1%" class="with-img"><img src="image/${item.id}.jpg" onerror="this.src='assets/img/items/alt.png'" class="img-rounded height-30 width-30"/></td>
   				<td>${item.name}</td>
+          <td>${item.cooking_items.filter(_item => _item.has_dispose != 1).length}</td>
   				<td>${item.cooked_items.length}</td>
   				<td>${item.cooked_items.reduce((amount, _item) => {
             return amount += parseFloat(_item.remaining_amount)
@@ -474,7 +500,6 @@ let render_overview = () => {
       `
     }
   })
-
   let template = `
     <div class="row m-t-10">
       <div class="col-xl-7">
@@ -489,6 +514,7 @@ let render_overview = () => {
                   <th width="1%">Code </th>
                   <th width="1%" data-orderable="false">Image </th>
                   <th class="text-nowrap">Item name </th>
+                  <th width="1%" class="text-nowrap">Cooking batches </th>
                   <th width="1%" class="text-nowrap">Cooked batches </th>
                   <th width="1%" class="text-nowrap">Total remaining amount(g) </th>
                   <th width="1%" class="text-nowrap">Dispose(g) </th>
@@ -513,11 +539,14 @@ let render_overview = () => {
   `
   $(".item-details").append($(template))
   render_overview_details(selected_item_code)
+
   $('#data-table-default').DataTable({
 		responsive: true
 	});
   $('.overview-item').click(function(){
     let selected_item_code = $(this).attr('class').split(' ')[1].split('-')[1]
+    localStorage.setItem('SELECTED_OVERVIEW_ITEM_CODE', selected_item_code)
+    render_overview()
     render_overview_details(selected_item_code)
   })
 }
@@ -652,6 +681,108 @@ let render_overview_details = (code) => {
 	chart.render();
 }
 
+let render_remaining = () => {
+  let selected_items = JSON.parse(localStorage.getItem('SELECTED_REMAINING_ITEMS'))
+
+  $(".item-details").empty()
+  $('.page-title').html('Remaining amounts')
+  let options = ``
+  materials.forEach((item, idx) => {
+    if(selected_items.includes(item.code)){
+      options += `
+        <option value="${item.code}" selected="selected">${item.name}(${item.cooked_items.length})</option>
+      `
+    }else{
+      options += `
+        <option value="${item.code}">${item.name}(${item.cooked_items.length})</option>
+      `
+    }
+  })
+  let template = `
+    <div class="row m-t-10">
+      <div class="col-xl-4">
+        <div class="panel">
+          <div class="panel-heading">
+            <h4 class="panel-title">Select items</h4>
+          </div>
+          <div class="panel-body">
+            <div class="d-flex mb-2">
+              <button class="unselect-all btn btn-sm btn-danger mr-2">Unselect all</button>
+            </div>
+            <select class="form-control remaining-select" multiple="multiple">
+              ${options}
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="col-xl-8">
+        <div class="panel">
+          <div class="panel-heading">
+            <h4 class="panel-title overview-item-name">Remaining details</h4>
+          </div>
+          <div class="panel-body remaining-item-detail">
+
+          </div>
+        </div>
+      </div>
+    </div>
+  `
+  $(".item-details").append($(template))
+  $(".remaining-select").select2({ placeholder: "Select items" })
+  $(".remaining-select").change(function(){
+    let items = $(this).val()
+    localStorage.setItem('SELECTED_REMAINING_ITEMS', JSON.stringify(items))
+    render_remaining_details()
+  })
+  $('.unselect-all').click(function(){
+    localStorage.setItem('SELECTED_REMAINING_ITEMS', JSON.stringify([]))
+    render_remaining()
+    render_remaining_details()
+  })
+  render_remaining_details()
+}
+
+let render_remaining_details = () => {
+  let selected_items = JSON.parse(localStorage.getItem('SELECTED_REMAINING_ITEMS'))
+  let template = ``
+  materials.forEach(item => {
+    if(selected_items.includes(item.code)){
+      let item_remainings = ``
+      let remaining_amounts = 0
+      item.cooked_items.forEach(_item => {
+        if(parseFloat(_item.remaining_amount) != 0){
+          remaining_amounts += parseFloat(_item.remaining_amount)
+          item_remainings += `
+          <div class="d-flex justify-content-between">
+            <span style="font-size: 12px;">${_item.remaining_amount}g</span>
+            <span style="font-size: 12px;">${parseFloat(_item.remaining_amount / item.advise_dosage) * 100}%</span>
+          </div>
+          <div class="progress progress-sm progress-bar-animated progress-bar-striped rounded-corner mb-2">
+            <div class="progress-bar bg-${_item.barColor}" style="width: ${parseFloat(_item.remaining_amount / item.advise_dosage) * 100}%"></div>
+          </div>
+          `
+        }
+      })
+      item_remainings += `
+        <div class="d-flex">
+          <span>Remaining amount: ${remaining_amounts}(g)</span>
+        </div>
+      `
+      template += `
+        <div class="row mb-3">
+          <div class="col-md-4">
+            <strong>${item.name}(${item.cooked_items.length})</strong>
+          </div>
+          <div class="col-md-8">
+            ${item_remainings}
+          </div>
+        </div>
+      `
+    }
+  })
+  $('.remaining-item-detail').empty()
+  $('.remaining-item-detail').append($(template))
+}
 // 点击cook按钮
 let cook_item = (id) => {
   //let data = get_data();
@@ -1036,8 +1167,6 @@ let ready_item = (item_id, cooking_item_id, isReady) => {
         if (idx != -1) {
           item.cooking_items.splice(idx, 1);
         }
-        //set_data(data);
-        //render_item_list();
         get_materials();
         render_item_detail(item_id);
         kitchen_notification(
